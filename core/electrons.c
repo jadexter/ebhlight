@@ -325,20 +325,21 @@ void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
      Y = MY_MIN(Y, 1000.);
      if ((!isnan(Tel)) && (Y > 0.) && (uel > 0.) && (Tel > 0.) && (sigma < 1.)) {
 	 L = 2.*Omega*uel*sqrt(Y);
+         // AMH temporary test statement
         fprintf(stdout, "check: %g %g %g %g \n", Y, Omega, uel, L);
      }
      // check for supercooling
      if ((uel < dt*L)) {
        fprintf(stdout, "supercooling! %g %g %g %g \n", Y, Omega, uel, L);
      }
+     // AMH added output of L
+     Qcool[i][j][k] = L;
 
      // Implement cooling as a passive sink in local energy conservation (Gcov)
      // update radG
      for (int mu = 0; mu < NDIM; mu++) {
        Gcov[mu] = -L*q.ucov[mu]; // Noble+ 2009 Eqns. 12-13
        radG[i][j][k][mu] = Gcov[mu]*ggeom[i][j][CENT].g;
-       // AMH added output of L
-       Qcool[i][j][k] = L;
      }
      //     fprintf(stdout, ": %g %g %g %g %g \n", Tel, Tel_target, Y, L, q.ucov[0]);
   }

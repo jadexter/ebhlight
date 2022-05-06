@@ -5,8 +5,8 @@ PROB = 'torus'
                          ### COMPILE TIME PARAMETERS ###
 
 # SPATIAL RESOLUTION AND MPI DECOMPOSITION
-bhl.config.set_cparm('N1TOT', 256)
-bhl.config.set_cparm('N2TOT', 256)
+bhl.config.set_cparm('N1TOT', 64)
+bhl.config.set_cparm('N2TOT', 64)
 bhl.config.set_cparm('N3TOT', 1)
 bhl.config.set_cparm('N1CPU', 1)
 bhl.config.set_cparm('N2CPU', 1)
@@ -60,7 +60,7 @@ bhl.config.set_cparm('X3R_RAD_BOUND', 'BC_PERIODIC')
                            ### RUNTIME PARAMETERS ###
 bhl.config.set_rparm('Tel_target', 'double', default=1e+9)
 bhl.config.set_rparm('Tel_rslope', 'double', default=0.0)
-bhl.config.set_rparm('tf', 'double', default = 30001)
+bhl.config.set_rparm('tf', 'double', default = 1.e-5)
 bhl.config.set_rparm('dt', 'double', default = 1.e-6)
 bhl.config.set_rparm('rin', 'double', default = 20)     # MEDIUM_DISK 10
 bhl.config.set_rparm('rmax', 'double', default = 41)    # MEDIUM_DISK 20

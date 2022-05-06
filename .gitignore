@@ -67,6 +67,7 @@ param_template.dat
 out_*
 err_*
 job_*
+compile.sh
 
 # Debug files
 *.dSYM/
