@@ -142,10 +142,10 @@ felrowan():
     //beta = 2.*ppres/(bsq+SMALL);
     //if(beta>1.e20)beta = 1.e20;
 
-    // Chael+2018 equation 9, this version assumes gam=game=gamp OR 
+    // Chael+2018 equation 9, this version assumes gam=game=gamp OR
     // up >> ue and gam=gamp
     sigmaw = bsq/(rho+gamp*up+game*ue);
-   
+
     betamax=1./4./sigmaw;
     // Chael+2018 equation 13
     if (beta < betamax) {
@@ -164,10 +164,11 @@ double get_fel(int i, int j, int k, double P[NVAR])
   return fel0;
   #endif
 
+  double fel;
   # if BETA_HEAT > 0
   struct of_geom geom = *get_geometry(i, j, k, CENT);
-  double Tpr, uel, Tel, Trat, pres, bsq, beta, fel;
-  
+  double Tpr, uel, Tel, Trat, pres, bsq, beta;
+
   Tpr = (gam-1.)*P[UU]/P[RHO];
   uel = 1./(game-1.)*P[KEL]*pow(P[RHO],game);
   Tel = (game-1.)*uel/P[RHO];
@@ -218,7 +219,7 @@ double safe_Kn(int n, double x)
 void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
 {
   timer_start(TIMER_ELECTRON);
-  
+
   #pragma omp parallel for collapse(3)
   ZLOOP {
     double rho = Ps[i][j][k][RHO];
@@ -245,7 +246,7 @@ void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
       double prefac = 3./2.*ME/MP*n*n*logCoul*CL*KBOL*THOMSON*(Ti - Te);
       double thetaCrit = 1.e-2;
       if (thetae < thetaCrit && thetai < thetaCrit) {
-        term1 = sqrt(thetam/(M_PI*thetae*thetai/2.));                          
+        term1 = sqrt(thetam/(M_PI*thetae*thetai/2.));
         term2 = sqrt(thetam/(M_PI*thetae*thetai/2.));
       } else if (thetae < thetaCrit) {
         term1 = exp(-1./thetai)/safe_Kn(2, 1./thetai)*sqrt(thetam/thetae);
@@ -279,7 +280,7 @@ void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
       Pf[i][j][k][KEL] = (game-1.)*ue_f*pow(Pf[i][j][k][RHO],-game);
     }
   } // ZLOOP
-  
+
   timer_stop(TIMER_ELECTRON);
 }
 
@@ -288,7 +289,7 @@ void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
  {
    struct of_geom *geom;
    struct of_state q;
-   double uel, Tel, Y, L, Omega, sigma, bsq, Tel_star;
+   double thetae, uel, Tel, Y, L, Omega, sigma, bsq, Tel_star;
    double X[NDIM], r, th;
    double Gcov[NDIM];
 #pragma omp parallel for collapse(3) schedule(dynamic)
@@ -308,13 +309,21 @@ void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
      // JD: presumably causes problems in any non-BH problem
      Omega=1./(pow(r,3./2.)+a);
 
-     // calculate current Te
-     uel = 1./(game-1.)*Ph[i][j][k][KEL]*pow(Ph[i][j][k][RHO],game);
-     Tel = (game-1.)*uel/Ph[i][j][k][RHO];
+     // calculate current electron temperature
+     thetae = MP/ME*Ph[i][j][k][KEL]*pow(Ph[i][j][k][RHO],game-1.);
+     Tel = thetae*ME*CL*CL/KBOL;
+     // uel = 1./(game-1.)*Ph[i][j][k][KEL]*pow(Ph[i][j][k][RHO],game);
+     // Tel = MP/ME*(game-1.)*uel/Ph[i][j][k][RHO];
+     // fprintf(stdout, "compare: %g %g %g \n", Tel, thetae, MP/ME);
      // calculate cooling rate L following Noble+
      Tel_star = Tel_target*pow(r,-1.*Tel_rslope);
+     // Thetae_star = Thetae_target*pow(r,-1.*Tel_rslope);
      //fprintf(stdout, "Telstar:  %g, %g %g %g \n", Tel_target, Tel_rslope, Tel_star, r);
      Y = Tel/Tel_star-1.;
+     fprintf(stdout, "Tel:  %g %g %g \n", Tel, Tel_star, Y);
+     // Y = thetae/Thetae_star-1.;
+     // fprintf(stdout, "printing others: %g %g %g %g \n", Tel_target, r, Tel, Tel_star);
+     // fprintf(stdout, "printing L first: %g %g %g %g \n", Y, Omega, uel, L);
      // this should cool the *electrons* e.g. cooling rate set by their uel not UU
      //L = Omega*uel*pow((Y*(1.+sign(Y))),1./2.);
      //     L = Omega*uel*(Y+abs(Y));
@@ -323,25 +332,25 @@ void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
      L = 0.;
      //limit Y for now and don't cool sigma > 1
      Y = MY_MIN(Y, 1000.);
+     // fprintf(stdout, "printing L second: %g %g %g %g \n", Y, Omega, uel, L);
      if ((!isnan(Tel)) && (Y > 0.) && (uel > 0.) && (Tel > 0.) && (sigma < 1.)) {
-	 L = 2.*Omega*uel*sqrt(Y);
-         // AMH temporary test statement
-        fprintf(stdout, "check: %g %g %g %g \n", Y, Omega, uel, L);
+       L = 2.*Omega*uel*sqrt(Y);
+       // AMH temporary test statement
+       // fprintf(stdout, "check: %g %g %g %g \n", Y, Omega, uel, L);
      }
      // check for supercooling
      if ((uel < dt*L)) {
        fprintf(stdout, "supercooling! %g %g %g %g \n", Y, Omega, uel, L);
      }
      // AMH added output of L
-     Qcool[i][j][k] = L;
+     // Qcool[i][j][k] = L;
 
      // Implement cooling as a passive sink in local energy conservation (Gcov)
      // update radG
-     for (int mu = 0; mu < NDIM; mu++) {
-       Gcov[mu] = -L*q.ucov[mu]; // Noble+ 2009 Eqns. 12-13
-       radG[i][j][k][mu] = Gcov[mu]*ggeom[i][j][CENT].g;
-     }
-     //     fprintf(stdout, ": %g %g %g %g %g \n", Tel, Tel_target, Y, L, q.ucov[0]);
+      for (int mu = 0; mu < NDIM; mu++) {
+        Gcov[mu] = -L*q.ucov[mu]; // Noble+ 2009 Eqns. 12-13
+        radG[i][j][k][mu] = Gcov[mu]*ggeom[i][j][CENT].g;
+      }
   }
 }
 #endif
@@ -430,4 +439,3 @@ void fixup_electrons_1zone(double P[NVAR])
   P[KEL] = MY_MIN(P[KEL], kelmax);
 }
 #endif // ELECTRONS
-

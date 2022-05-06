@@ -47,6 +47,7 @@ dumps/
 *.tar.gz*
 restarts
 restarts/
+laptop_*/
 generate_all_plots.txt
 test_all.txt
 *.out
