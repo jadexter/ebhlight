@@ -312,15 +312,10 @@ void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
      // calculate current electron temperature
      thetae = MP/ME*Ph[i][j][k][KEL]*pow(Ph[i][j][k][RHO],game-1.);
      Tel = thetae*ME*CL*CL/KBOL;
-     // uel = 1./(game-1.)*Ph[i][j][k][KEL]*pow(Ph[i][j][k][RHO],game);
-     // Tel = MP/ME*(game-1.)*uel/Ph[i][j][k][RHO];
-     // fprintf(stdout, "compare: %g %g %g \n", Tel, thetae, MP/ME);
      // calculate cooling rate L following Noble+
      Tel_star = Tel_target*pow(r,-1.*Tel_rslope);
-     // Thetae_star = Thetae_target*pow(r,-1.*Tel_rslope);
-     //fprintf(stdout, "Telstar:  %g, %g %g %g \n", Tel_target, Tel_rslope, Tel_star, r);
      Y = Tel/Tel_star-1.;
-     fprintf(stdout, "Tel:  %g %g %g \n", Tel, Tel_star, Y);
+     // fprintf(stdout, "Tel:  %g %g %g \n", Tel, Tel_star, Y);
      // Y = thetae/Thetae_star-1.;
      // fprintf(stdout, "printing others: %g %g %g %g \n", Tel_target, r, Tel, Tel_star);
      // fprintf(stdout, "printing L first: %g %g %g %g \n", Y, Omega, uel, L);
@@ -335,8 +330,6 @@ void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
      // fprintf(stdout, "printing L second: %g %g %g %g \n", Y, Omega, uel, L);
      if ((!isnan(Tel)) && (Y > 0.) && (uel > 0.) && (Tel > 0.) && (sigma < 1.)) {
        L = 2.*Omega*uel*sqrt(Y);
-       // AMH temporary test statement
-       // fprintf(stdout, "check: %g %g %g %g \n", Y, Omega, uel, L);
      }
      // check for supercooling
      if ((uel < dt*L)) {
@@ -346,7 +339,7 @@ void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
      Qcool[i][j][k] = L;
 
      // Implement cooling as a passive sink in local energy conservation (Gcov)
-     // update radG
+     // update radG, the radiation four-force density (Ryan+ 2015 Eq. 4)
       for (int mu = 0; mu < NDIM; mu++) {
         Gcov[mu] = -L*q.ucov[mu]; // Noble+ 2009 Eqns. 12-13
         radG[i][j][k][mu] = Gcov[mu]*ggeom[i][j][CENT].g;

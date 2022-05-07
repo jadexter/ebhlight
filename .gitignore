@@ -54,6 +54,7 @@ test_all.txt
 *.err
 hotcross.dat
 output_*
+prob/test_*
 
 # Build system
 TMP
