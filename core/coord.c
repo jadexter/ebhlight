@@ -53,9 +53,9 @@ void coord(int i, int j, int k, int loc, double *X)
     fprintf(stderr, "Invalid coordinate location!\n");
     exit(1);
   }
-  if (X[1] < 1e-10) { 
-    fprintf(stdout, "in coord: %i %i %i %i %g %g", i, j, k, NG, X[0], X[1]);
-  }
+//  if (X[1] < 1e-10) { 
+//    fprintf(stdout, "in coord: %i %i %i %i %g %g", i, j, k, NG, X[0], X[1]);
+//}
 }
 
 // Assumes Boyer-Lindquist coordinates
