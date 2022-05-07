@@ -343,7 +343,7 @@ void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
        fprintf(stdout, "supercooling! %g %g %g %g \n", Y, Omega, uel, L);
      }
      // AMH added output of L
-     // Qcool[i][j][k] = L;
+     Qcool[i][j][k] = L;
 
      // Implement cooling as a passive sink in local energy conservation (Gcov)
      // update radG
