@@ -31,6 +31,12 @@ void set_param_optional(char *key, void *data)
   noptparam++;
 }
 
+/**
+ * @brief Create an entry in table[] with the appropriate key and data address
+ * 
+ * @param key key to identify data (same as variable name)
+ * @param data address of the associated global variable
+ */
 void set_param(char *key, void *data)
 {
   table[nparam].key = key;
@@ -56,6 +62,10 @@ int get_param(char *key, void **data, int *req)
 }
 
 char metric[STRLEN], reconstuction[STRLEN];
+/**
+ * @brief Points each entry in table[key].data to the appropriate variables
+ * 
+ */
 void set_core_params()
 {
   #if RECONSTRUCTION == LINEAR
@@ -155,6 +165,11 @@ void set_core_params()
   set_param("outputdir", &outputdir);
 }
 
+/**
+ * @brief Uses the data stored in the pfname file to populate the previously initialized table[] variables
+ * 
+ * @param pfname File to read param values from
+ */
 void read_params(char *pfname)
 {
   void *ptr;
@@ -229,10 +244,15 @@ void read_params(char *pfname)
   if (mpi_io_proc()) fprintf(stdout, "Parameter file read.\n\n"); 
 }
 
+/**
+ * @brief Sets the core params and the params supplied from pname
+ * 
+ * @param pfname File to read parameters from
+ */
 void init_params(char *pfname)
 {
   set_core_params();
-  set_problem_params();
+  set_problem_params(); // Located in the appropriate problem.c file
   read_params(pfname);
 }
 

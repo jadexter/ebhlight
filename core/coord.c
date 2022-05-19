@@ -22,6 +22,15 @@
  *
  */
 
+/**
+ * @brief Fill the X matrix with the coordinates of a location on an active grid
+ * 
+ * @param i First zone index
+ * @param j Second zone index
+ * @param k Third zone index
+ * @param loc Location within grid (0 = face1, 1 = face2, 2 = face3, 3 = corner, 4 = center)
+ * @param X 1x4 matrix to fill with coords
+ */
 void coord(int i, int j, int k, int loc, double *X)
 {
   X[0] = t;
@@ -296,6 +305,12 @@ void set_dxdX(double X[NDIM], double dxdX[NDIM][NDIM])
   #endif
 }
 
+/**
+ * @brief Set the covariant g object at given coords
+ * 
+ * @param X 1x4 matrix of coords
+ * @param gcov 4x4 matrix to set to gcov
+ */
 void set_gcov(double X[NDIM], double gcov[NDIM][NDIM])
 {
   memset(gcov, 0, NDIM*NDIM*sizeof(double));
@@ -351,7 +366,10 @@ void set_gcov(double X[NDIM], double gcov[NDIM][NDIM])
   #endif // METRIC
 }
 
-// Establish X coordinates
+/**
+ * @brief Establish starting, stopping coords and step size (startx, startx_rad, startx_proc, stopx, stopx_rad, stopx_proc, dx)
+ * 
+ */
 void set_points()
 {
   #if METRIC == CARTESIAN
@@ -423,6 +441,10 @@ void set_points()
   stopx[3] = startx[3] + dx[3]*N3TOT;
 }
 
+/**
+ * @brief Set boundary and steps, then loop through active zones setting g matrix, g, alpha and connection coefficient
+ * 
+ */
 void set_grid()
 {
   double X[NDIM];
@@ -442,8 +464,7 @@ void set_grid()
       LOCLOOP {
         coord(i, j, 0, loc, X);
         set_gcov(X, ggeom[i][j][loc].gcov);
-        ggeom[i][j][loc].g = gcon_func(ggeom[i][j][loc].gcov,
-          ggeom[i][j][loc].gcon);
+        ggeom[i][j][loc].g = gcon_func(ggeom[i][j][loc].gcov, ggeom[i][j][loc].gcon);
         ggeom[i][j][loc].alpha = 1.0 / sqrt(-ggeom[i][j][loc].gcon[0][0]);
       }
        
@@ -489,6 +510,10 @@ void set_grid()
   #endif
 }
 
+/**
+ * @brief Loop through all active zones, setting each primitive and flux to 0. Also 0s the pflag and fail_save flags in each zone
+ * 
+ */
 void zero_arrays()
 {
   ZSLOOP(-NG, N1-1 + NG, -NG, N2-1 + NG, -NG, N3-1 + NG) {

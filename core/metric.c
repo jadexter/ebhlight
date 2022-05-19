@@ -8,6 +8,13 @@
 
 #include "decs.h"
 
+/**
+ * @brief Finds the contravariant g metric by inverting covariant g
+ * 
+ * @param gcov covariant g to invert
+ * @param gcon matrix to fill with the contravariant g
+ * @return sqrt(abs(det(gcov)))
+ */
 double gcon_func(double gcov[][NDIM], double gcon[][NDIM])
 {
   double gdet = invert(&gcov[0][0],&gcon[0][0]);
@@ -17,9 +24,14 @@ double gcon_func(double gcov[][NDIM], double gcon[][NDIM])
 // Set the spatial discretization in numerical derivatives
 #define DELTA 1.e-5
 
-// Calculate connection coefficient \Gamma^{i}_{j,k} = conn[..][i][j][k]
-void conn_func(double *X, struct of_geom *geom, double conn[][NDIM][NDIM])
-{
+/**
+ * @brief Calculate connection coefficient \Gamma^{i}_{j,k} = conn[..][i][j][k]
+ * 
+ * @param X 1x4 matrix of coordinates
+ * @param geom g metric structure at X
+ * @param conn 4x4x4 matrix to fill
+ */
+void conn_func(double *X, struct of_geom *geom, double conn[][NDIM][NDIM]) {
   double tmp[NDIM][NDIM][NDIM];
   double Xh[NDIM], Xl[NDIM];
   double gh[NDIM][NDIM];
@@ -107,7 +119,15 @@ void raise(double ucov[NDIM], double gcon[NDIM][NDIM], double ucon[NDIM])
       + gcon[3][3] * ucov[3];
 }
 
-// Load local geometry into structure geom
+/**
+ * @brief Get the ggeom entry for a specified grid zone
+ * 
+ * @param ii Zone 1 index
+ * @param jj Zone 2 index
+ * @param kk Zone 3 index
+ * @param loc Location within zone
+ * @return Address of the appropriate ggeom entry
+ */
 struct of_geom *get_geometry(int ii, int jj, int kk, int loc)
 {
   // Store current spatial indices in case of errors
@@ -217,6 +237,12 @@ double MINOR(double m[16], int r0, int r1, int r2, int c0, int c1, int c2)
          m[4*r0+c2]*(m[4*r1+c0]*m[4*r2+c1] - m[4*r2+c0]*m[4*r1+c1]);
 }
 
+/**
+ * @brief Find the adjoint of 4x4 matrix m and write it to adjOut
+ * 
+ * @param m 4x4 matrix input
+ * @param adjOut 4x4 matrix output
+ */
 void adjoint(double m[16], double adjOut[16])
 {
   adjOut[ 0] =  MINOR(m,1,2,3,1,2,3);
@@ -240,6 +266,12 @@ void adjoint(double m[16], double adjOut[16])
   adjOut[15] =  MINOR(m,0,1,2,0,1,2);
 }
 
+/**
+ * @brief Find matrix determinant
+ * 
+ * @param m 4x4 matrix input
+ * @return det(m) 
+ */
 double determinant(double m[16])
 {
   return m[0]*MINOR(m,1,2,3,1,2,3) -
@@ -248,6 +280,13 @@ double determinant(double m[16])
          m[3]*MINOR(m,1,2,3,0,1,2);
 }
 
+/**
+ * @brief Writes invOut as the inverse of matrix m
+ * 
+ * @param m matrix to invert
+ * @param invOut empty to matrix to fill with m inverse
+ * @return det(m)
+ */
 double invert(double *m, double *invOut)
 {
   adjoint(m, invOut);

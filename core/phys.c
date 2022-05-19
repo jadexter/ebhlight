@@ -8,9 +8,16 @@
 
 #include "decs.h"
 
-// Calculate fluxes in direction dir
-void primtoflux(double *Pr, struct of_state *q, int dir, struct of_geom *geom, 
-  double *flux)
+/**
+ * @brief Calculate fluxes in direction dir
+ * 
+ * @param Pr Primitives matrix
+ * @param q State matrix at the gridpoint
+ * @param dir Direction of interest (0,1,2,3)
+ * @param geom ggeom entry at the gridpoint
+ * @param flux Matrix to store fluxes in
+ */
+void primtoflux(double *Pr, struct of_state *q, int dir, struct of_geom *geom, double *flux)
 {
   double mhd[NDIM];
 
@@ -25,7 +32,7 @@ void primtoflux(double *Pr, struct of_state *q, int dir, struct of_geom *geom,
   flux[U2] = mhd[2];
   flux[U3] = mhd[3];
 
-  // Dual of Maxwell tensor
+  // Dual of Maxwell tensor (eq. 7 in 2015 paper)
   flux[B1] = q->bcon[1]*q->ucon[dir] - q->bcon[dir]*q->ucon[1];
   flux[B2] = q->bcon[2]*q->ucon[dir] - q->bcon[dir]*q->ucon[2];
   flux[B3] = q->bcon[3]*q->ucon[dir] - q->bcon[dir]*q->ucon[3];
@@ -35,34 +42,51 @@ void primtoflux(double *Pr, struct of_state *q, int dir, struct of_geom *geom,
   flux[KTOT] = flux[RHO]*Pr[KTOT];
   #endif // ELECTRONS
 
+  //Multiply by sqrt(-g)
   PLOOP flux[ip] *= geom->g;
 }
 
-// calculate magnetic field four-vector
+/**
+ * @brief Implements equations 8 and 9 of the 2015 Ryan paper to calculate magnetic field four-vector
+ * 
+ * @param Pr Primitives matrix
+ * @param ucon Contravariant velocity
+ * @param ucov Covariant velocity
+ * @param bcon Address to store the results of the bcon calc
+ */
 void bcon_calc(double *Pr, double *ucon, double *ucov, double *bcon)
 {
-  bcon[0] = Pr[B1]*ucov[1] + Pr[B2]*ucov[2] + Pr[B3]*ucov[3];
+  bcon[0] = Pr[B1]*ucov[1] + Pr[B2]*ucov[2] + Pr[B3]*ucov[3]; // Eq. 8
+
+  //Eq. 9
   for (int j = 1; j < 4; j++)
     bcon[j] = (Pr[B1-1+j] + bcon[0]*ucon[j])/ucon[0];
 }
 
-// MHD stress-energy tensor with first index up, second index down. A factor of
-// sqrt(4 pi) is absorbed into the definition of b.
+/**
+ * @brief Performs the calculation in eq. 5 of the 2015 paper for the MHD stress-energy tensor with first index up, second index down
+ * 
+ * @param Pr Primitives matrix
+ * @param dir Direction (upper index mu in paper)
+ * @param q State matrix at the gridpoint (ucon, ucov, bcon, bcov)
+ * @param mhd 1x4 matrix to hold S-E tensor
+ * 
+ * @remark A factor of sqrt(4 pi) is absorbed into the definition of b.
+ */
 void mhd_calc(double *Pr, int dir, struct of_state *q, double *mhd)
 {
   double r, u, pres, w, bsq, eta, ptot;
 
-  r = Pr[RHO];
-  u = Pr[UU];
-  pres = (gam - 1.) * u;
+  r = Pr[RHO]; // rho_0
+  u = Pr[UU]; // u
+  pres = (gam - 1.) * u; // Eq. 12
   w = pres + r + u;
-  bsq = dot(q->bcon, q->bcov);
-  eta = w + bsq;
+  bsq = dot(q->bcon, q->bcov); // above eq. 6
+  eta = w + bsq; 
   ptot = pres + 0.5 * bsq;
 
   for (int mu = 0; mu < NDIM; mu++) {
-    mhd[mu] = eta*q->ucon[dir]*q->ucov[mu] + ptot*delta(dir, mu) - 
-     q->bcon[dir]*q->bcov[mu];
+    mhd[mu] = eta*q->ucon[dir]*q->ucov[mu] + ptot*delta(dir, mu) - q->bcon[dir]*q->bcov[mu]; // Eq. 5 for the MHD stress-energy tensor
   }
 }
 
@@ -103,7 +127,13 @@ double bsq_calc(double *Pr, struct of_geom *geom)
   return (dot(q.bcon, q.bcov));
 }
 
-// Calculate ucon, ucov, bcon, bcov from primitive variables
+/**
+ * @brief Calculate ucon, ucov, bcon, bcov from primitive variables
+ * 
+ * @param Pr Primitives matrix
+ * @param geom Geometry at the grid zone
+ * @param q of_state object to fill
+ */
 void get_state(double *Pr, struct of_geom *geom, struct of_state *q)
 {
   ucon_calc(Pr, geom, q->ucon);
@@ -112,7 +142,13 @@ void get_state(double *Pr, struct of_geom *geom, struct of_state *q)
   lower(q->bcon, geom->gcov, q->bcov);
 }
 
-// Find contravariant four-velocity
+/**
+ * @brief Find contravariant four-velocity
+ * 
+ * @param Pr Primitives matrix
+ * @param geom Geometry at the grid zone
+ * @param ucon Address to place calculated four-vel
+ */
 void ucon_calc(double *Pr, struct of_geom *geom, double *ucon)
 {
   double alpha, gamma;
@@ -129,7 +165,14 @@ void ucon_calc(double *Pr, struct of_geom *geom, double *ucon)
   }
 }
 
-// Find gamma-factor wrt normal observer
+/**
+ * @brief Find gamma-factor wrt normal observer
+ * 
+ * @param Pr Primitive matrix
+ * @param geom ggeom entry at the desired gridzone
+ * @param gamma address to store the calculated gamma value
+ * @returns 0 - Success, 1 - Failure
+ */
 int mhd_gamma_calc(double *Pr, struct of_geom *geom, double *gamma)
 {
   double qsq;

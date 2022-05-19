@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
   } // omp parallel
 
   // Initialize some global variables
-  reset_log_variables();
+  reset_log_variables(); 
   nstep = 0;
 
   // Perform initializations, either directly, via checkpoint, or initialize
@@ -230,6 +230,10 @@ int main(int argc, char *argv[])
   return 0;
 }
 
+/**
+ * @brief Resets primitives and radiation info and initializes the grid
+ * 
+ */
 void init_core()
 {
   zero_arrays();

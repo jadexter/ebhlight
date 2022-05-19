@@ -132,6 +132,10 @@ static char version[STRLEN], problem_name[STRLEN];
 static int dump_id = 0, restart_id = 0, restart_perm_id = 0, fdump_id = 0;
 static grid_double_type divb;
 
+/**
+ * @brief Initializes the proper folders and files in output directory (/dumps /restarts /xmf)
+ * 
+ */
 void init_io()
 {
   strcpy(dumpdir, "dumps/");
@@ -1058,6 +1062,14 @@ void restart_write(int restart_type)
   timer_stop(TIMER_OUT);
 }
 
+/**
+ * @brief Reads the contents of a restart file and sets global variables appropriately
+ * 
+ * @param fname Restart hdf5 file to read from
+ * 
+ * @remark Sets file_id global var to fname
+ * @remark Sets the value of numerous global variables with READ_HDR (ie. x1Min, Dtd, tlog, etc.)
+ */
 void restart_read(char *fname)
 {
   timer_start(TIMER_OUT);
@@ -1271,7 +1283,10 @@ void restart_read(char *fname)
   timer_stop(TIMER_OUT);
 }
 
-// Use fluid restart data as initial conditions, usually for a GRRMHD simulation
+/**
+ * @brief Use fluid restart data as initial conditions, usually for a GRRMHD simulation
+ * 
+ */
 void init_fluid_restart()
 {
   hsize_t file_grid_dims[4],file_start[4],file_count[4];
@@ -1285,6 +1300,7 @@ void init_fluid_restart()
     fprintf(stderr, "Initializing fluid from %s\n\n", init_from_grmhd);
   }
 
+  // Create an appropriate file identifier for the init_from_grmhd file
   hid_t plist_id = H5Pcreate(H5P_FILE_ACCESS);
   H5Pset_fapl_mpio(plist_id, MPI_COMM_WORLD, MPI_INFO_NULL);
   hid_t file_id = H5Fopen(init_from_grmhd, H5F_ACC_RDONLY, plist_id);
@@ -1301,7 +1317,7 @@ void init_fluid_restart()
   {
     char *name = "P";
     for (int d = 0; d < 3; d++)
-      file_grid_dims[d] = fdims[d];
+      file_grid_dims[d] = fdims[d]; //{N1TOT, N2TOT, N3TOT}
     file_grid_dims[3] = NVAR;  // For vectors
     hid_t filespace = H5Screate_simple(4, file_grid_dims, NULL);
     for (int d = 0; d < 3; d++) {
@@ -1310,8 +1326,7 @@ void init_fluid_restart()
     }
     file_start[3] = 0;
     file_count[3] = NVAR;
-    H5Sselect_hyperslab(filespace, H5S_SELECT_SET, file_start, NULL, file_count,
-      NULL);
+    H5Sselect_hyperslab(filespace, H5S_SELECT_SET, file_start, NULL, file_count, NULL);
 
     for (int d = 0; d < 3; d++) {
       mem_grid_dims[d] = mdims[d] + 2*NG;
@@ -1329,9 +1344,8 @@ void init_fluid_restart()
     H5Pclose(plist_id);
 
     plist_id = H5Pcreate(H5P_DATASET_XFER);
-      H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE);
-    H5Dread(dset_id, H5T_NATIVE_DOUBLE, memspace, filespace, plist_id,
-      &P[0][0][0][0]);
+    H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE);
+    H5Dread(dset_id, H5T_NATIVE_DOUBLE, memspace, filespace, plist_id, &P[0][0][0][0]);
     H5Dclose(dset_id);
     H5Pclose(plist_id);
 //    READ_PRIM(P, TYPE_FLOAT);
@@ -1343,6 +1357,12 @@ void init_fluid_restart()
   MPI_Barrier(MPI_COMM_WORLD);
 }
 
+/**
+ * @brief Attempts to initialize from a restart file (restart.last located in outputdir/restarts)
+ * 
+ * @return 0 - no restart found
+ * @return 1 - restart file found and properly initialized
+ */
 int restart_init()
 {
   char fname[STRLEN], lastname[STRLEN];

@@ -104,7 +104,14 @@
 #else
 #define NVAR_EL (0)
 #endif
-#define NVAR (NVAR_BASE + NVAR_EL)
+#if NONTHERMAL
+#define TEST1 (NVAR_BASE + NVAR_EL - 1 + 1)
+#define TEST2 (NVAR_BASE + NVAR_EL - 1 + 2)
+#define NVAR_NT (2)
+#else
+#define NVAR_NT (0)
+#endif
+#define NVAR (NVAR_BASE + NVAR_EL + NVAR_NT)
 
 // Centering of grid functions
 #define FACE1 (0)

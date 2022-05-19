@@ -11,6 +11,12 @@
 static gsl_rng **rng;
 
 // Use Mersenne twister
+
+/**
+ * @brief Initializes a differently seeded Mersenne Twister generator on every thread
+ * 
+ * @param seed each thread is seeded with (seed + thread number)
+ */
 void init_random(int seed)
 {
   rng = malloc(nthreads*sizeof(gsl_rng*));

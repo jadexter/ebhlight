@@ -28,14 +28,21 @@ double get_time_per_step(int timerCode)
   return times[timerCode]/dnstep;
 }
 
+/**
+ * @brief Resets all time to 0 and sets nstep_start to nstep (important if nstep set in restart_read)
+ * 
+ */
 void time_init()
 {
-  for (int n = 0; n < NUM_TIMERS; n++) {
-    times[n] = 0.;
-  }
+  timers_reset();
   nstep_start = nstep;
 }
 
+/**
+ * @brief Starts a timer in the timers[] array
+ * 
+ * @param timerCode eg TIMER_UPDATE (0)
+ */
 void timer_start(int timerCode)
 {
   #pragma omp barrier
@@ -47,6 +54,11 @@ void timer_start(int timerCode)
   }
 }
 
+/**
+ * @brief Stops a timer in the timers[] array
+ * 
+ * @param timerCode eg TIMER_UPDATE (0)
+ */
 void timer_stop(int timerCode)
 {
   #pragma omp barrier
@@ -58,6 +70,10 @@ void timer_stop(int timerCode)
   }
 }
 
+/**
+ * @brief Sets all times to 0 in the times[] array
+ * 
+ */
 void timers_reset()
 {
   for (int n = 0; n < NUM_TIMERS; n++) {

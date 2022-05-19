@@ -8,6 +8,10 @@
 
 #include "decs.h"
 
+/**
+ * @brief Zeroes the step variables associated with radiation (ie. step_tot, step_lost, step_sent, etc.)
+ * 
+ */
 void reset_log_variables()
 {
   #if RADIATION
@@ -16,6 +20,10 @@ void reset_log_variables()
   #endif
 }
 
+/**
+ * @brief Zeroes some variables associated with radiation
+ * 
+ */
 void reset_dump_variables()
 {
   #if RADIATION

@@ -10,6 +10,13 @@
 
 void inflow_check(double *Pr, int ii, int jj, int type);
 
+/**
+ * @brief Sets the ghost zone primitives to the prims of the first active zone for each coord
+ * 
+ * @param prim Current primitive matrix
+ * 
+ * @remark This only works when there is no global offset
+ */
 void bound_prim(grid_prim_type prim) 
 {
   timer_start(TIMER_BOUND);
@@ -26,7 +33,7 @@ void bound_prim(grid_prim_type prim)
           #else
           {
             #if X1L_GAS_BOUND == BC_OUTFLOW
-            int iactive = NG;
+            int iactive = NG; //First active zone in x1 coord
             PLOOP prim[i][j][k][ip] = prim[iactive][j][k][ip];
             pflag[i][j][k] = pflag[iactive][j][k];
 

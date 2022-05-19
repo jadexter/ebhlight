@@ -92,7 +92,8 @@ void fixup1zone(int i, int j, int k, double pv[NVAR])
   geom = get_geometry(i, j, k, CENT);
   if (mhd_gamma_calc(pv, geom, &gamma)) {
     pflag[i][j][k] = -333;
-  } else {
+  } 
+  else {
     if (gamma > GAMMAMAX) {
       f = sqrt((GAMMAMAX*GAMMAMAX - 1.)/(gamma*gamma - 1.));
       pv[U1] *= f;
