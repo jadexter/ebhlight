@@ -81,7 +81,10 @@ void timers_reset()
   }
 }
 
-// Report a running average of timing data
+/**
+ * @brief Report a running average of timing data
+ * 
+ */
 void report_performance()
 {
   if (mpi_myrank() == 0) {

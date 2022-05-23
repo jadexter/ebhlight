@@ -8,7 +8,11 @@
 
 #include "decs.h"
 
-// Apply floors to density, internal energy
+/**
+ * @brief Apply floors and ceilings to density, internal energy, etc.
+ * 
+ * @param Pv Primitives to fix
+ */
 void fixup(grid_prim_type Pv)
 {
   timer_start(TIMER_FIXUP);
@@ -61,6 +65,14 @@ void ut_calc_3vel(double vcon[NDIM], struct of_geom *geom, double *ut)
 #define BSQORHOMAX (50.)
 #define BSQOUMAX (2500.)
 #define UORHOMAX (50.)
+/**
+ * @brief Helper function for fixup() routine
+ * 
+ * @param i Zone 1 index
+ * @param j Zone 2 index
+ * @param k Zone 3 index
+ * @param pv Primitives at the desired zone
+ */
 void fixup1zone(int i, int j, int k, double pv[NVAR])
 {
   double rhoflr, uflr, f, gamma;

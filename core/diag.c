@@ -38,6 +38,11 @@ void reset_dump_variables()
   #endif
 }
 
+/**
+ * @brief Creates a diagnostic file with information on conserved variables, primitives, conserved mass and energy, etc.
+ * 
+ * @param call_code one of DIAG_INIT, DIAG_LOG, DIAG_DUMP or DIAG_FINAL
+ */
 void diag(int call_code)
 {
   double U[NVAR], divb;

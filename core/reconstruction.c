@@ -8,7 +8,14 @@
 
 #include "decs.h"
 
-// Performs the slope-limiting for the numerical flux calculation
+/**
+ * @brief Calculates the slope limiter for one gridpoint for the numerical flux calculation
+ * 
+ * @param y1 Value at left neighbor center
+ * @param y2 Value at gridpoint center
+ * @param y3 Value at right neighbor center
+ * @return Maximum slope
+ */
 double slope_lim(double y1, double y2, double y3)
 {
   double Dqm, Dqp, Dqc, s;
@@ -137,6 +144,14 @@ void weno(double x1, double x2, double x3, double x4, double x5, double *lout, d
   *rout = vr[0]*wr[0] + vr[1]*wr[1] + vr[2]*wr[2];
 }
 
+/**
+ * @brief Performs linear reconstruction of the primitive value in one dimension in each gridzone given the values at the center of the gridzone and each neighbor
+ * 
+ * @param Ptmp Primitive values at each gridpoint in one dimension (eg. x1)
+ * @param N Grid size in chosen dimension 
+ * @param P_l Empty (1D) matrix to fill with reconstructed value at the left of each gridzone
+ * @param P_r Empty (1D) matrix to fill with reconstructed value at the right of each gridzone
+ */
 void reconstruct_lr_lin(double Ptmp[NMAX+2*NG][NVAR], int N,
   double P_l[NMAX+2*NG][NVAR], double P_r[NMAX+2*NG][NVAR])
 {
@@ -186,6 +201,14 @@ void reconstruct_lr_weno(double Ptmp[NMAX+2*NG][NVAR], int N,
   }
 }
 
+/**
+ * @brief Wrapper script for linear and weno reconstruction functions
+ * 
+ * @param Ptmp Primitive values at each gridpoint in one dimension (eg. x1)
+ * @param N Grid size in chosen dimension 
+ * @param P_l Empty (1D) matrix to fill with reconstructed value at the left of each gridzone
+ * @param P_r Empty (1D) matrix to fill with reconstructed value at the right of each gridzone
+ */
 void reconstruct(double Ptmp[NMAX+2*NG][NVAR], int N,
   double P_l[NMAX+2*NG][NVAR], double P_r[NMAX+2*NG][NVAR])
 {

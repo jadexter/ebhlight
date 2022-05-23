@@ -204,9 +204,17 @@ int mhd_gamma_calc(double *Pr, struct of_geom *geom, double *gamma)
   return (0);
 }
 
-// Calculate components of magnetosonic velocity from primitive variables
-void mhd_vchar(double *Pr, struct of_state *q, struct of_geom *geom, int js,
-  double *vmax, double *vmin)
+/**
+ * @brief Calculate components of magnetosonic velocity from primitive variables
+ * 
+ * @param Pr Primiyives matrix
+ * @param q State vector
+ * @param geom Geometry vector
+ * @param js 
+ * @param vmax Empty var to store the maximum velocity
+ * @param vmin Empty var to store the minimum velocity
+ */
+void mhd_vchar(double *Pr, struct of_state *q, struct of_geom *geom, int js, double *vmax, double *vmin)
 {
   double discr, vp, vm, bsq, ee, ef, va2, cs2, cms2, rho, u;
   double Acov[NDIM], Bcov[NDIM], Acon[NDIM], Bcon[NDIM];

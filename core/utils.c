@@ -8,6 +8,13 @@
 
 #include "decs.h"
 
+/**
+ * @brief Wrapper function for malloc
+ * 
+ * @param num number of blocks to allocate
+ * @param size size of each block
+ * @return void* beginning of the allocated blocks
+ */
 void *safe_malloc(size_t num, size_t size)
 {
   size *= num;

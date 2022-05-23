@@ -26,6 +26,12 @@ void hdf5_make_directory(const char *name)
   hid_t group_id = H5Gcreate2(file_id, path, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   H5Gclose(group_id);
 }
+
+/**
+ * @brief Sets hdf5_cur_dir to the path specified by path
+ * 
+ * @param path path to set current directory to
+ */
 void hdf5_set_directory(const char *path)
 {
   strncpy(hdf5_cur_dir, path, STRLEN-1);
@@ -344,6 +350,10 @@ void track_ph()
 }
 #endif // RADIATION
 
+/**
+ * @brief Create a grid.h5 file in the dumps directory and write grid information (ggeom struct values, coords, etc.)
+ * 
+ */
 void dump_grid()
 {
   char name[STRLEN], fname[STRLEN];
@@ -397,8 +407,8 @@ void dump_grid()
     hsize_t mdims[RANK] = {N1, N2, N3, NDIM};
     for (int d = 0; d < 3; d++) {
       if (global_stop[d+1] == fdims[d]-1) {
-	fcount[d]++;
-	mdims[d]++;
+	      fcount[d]++;
+	      mdims[d]++;
       }
     }
     hsize_t mstart[RANK] = {0, 0, 0, 0};
@@ -411,8 +421,8 @@ void dump_grid()
       coord(i, j, k, CORN, X);
       cart_coord(X, Xcart_loc);
       for (int l = 0; l < NDIM; l++) {
-	XFharm[n+l] = X[l];
-	XFcart[n+l] = Xcart_loc[l];
+	      XFharm[n+l] = X[l];
+	      XFcart[n+l] = Xcart_loc[l];
       }
       n += 4;
     }
@@ -447,8 +457,8 @@ void dump_grid()
     int n = 0;
     ZLOOP {
       DLOOP2 {
-	gcov[n] = ggeom[i][j][CENT].gcov[mu][nu];
-	n++;
+	      gcov[n] = ggeom[i][j][CENT].gcov[mu][nu];
+	      n++;
       }
     }
     WRITE_TENSOR_NO_GHOSTS(gcov, TYPE_DBL);
@@ -460,8 +470,8 @@ void dump_grid()
     int n = 0;
     ZLOOP {
       DLOOP2 {
-	gcon[n] = ggeom[i][j][CENT].gcon[mu][nu];
-	n++;
+	      gcon[n] = ggeom[i][j][CENT].gcon[mu][nu];
+	      n++;
       }
     }
     WRITE_TENSOR_NO_GHOSTS(gcon, TYPE_DBL);
@@ -547,9 +557,9 @@ void dump_grid()
       coord(i, j, k, CENT, X);
       jac_harm_to_cart(X, Lambda_cov_local, Lambda_con_local);
       DLOOP2 {
-	Lambda_h2cart_con[n] = Lambda_con_local[mu][nu];
-	Lambda_h2cart_cov[n] = Lambda_cov_local[mu][nu];
-	n++;
+	      Lambda_h2cart_con[n] = Lambda_con_local[mu][nu];
+	      Lambda_h2cart_cov[n] = Lambda_cov_local[mu][nu];
+	      n++;
       }
     }
     WRITE_TENSOR_NO_GHOSTS(Lambda_h2cart_con, TYPE_DBL);
@@ -562,6 +572,10 @@ void dump_grid()
   H5Fclose(file_id);
 }
 
+/**
+ * @brief Creates a new dump file and dumps a bunch of info about the state of the sim
+ * 
+ */
 void dump()
 {
   timer_start(TIMER_OUT);
@@ -1477,6 +1491,19 @@ void read_scalar(void *data, const char *name, hsize_t type)
   H5Sclose(memspace);
 }
 
+/**
+ * @brief Writes data to a dataset specified by name within the current file
+ * 
+ * @param data Data to write
+ * @param name Dataset name
+ * @param rank 
+ * @param fdims 
+ * @param fstart 
+ * @param fcount 
+ * @param mdims 
+ * @param mstart 
+ * @param type Type of data
+ */
 void write_array(void *data, const char *name, hsize_t rank,
   hsize_t *fdims, hsize_t *fstart, hsize_t *fcount, hsize_t *mdims,
   hsize_t *mstart, hsize_t type)

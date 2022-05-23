@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
   if (mpi_io_proc())
     fprintf(stdout, "t = %e tf = %e\n", t, tf);
   if (!is_restart)
-    diag(DIAG_DUMP);
+    diag(DIAG_DUMP); // Basically just sets up and then calls dump()
 
   if (mpi_io_proc())
     fprintf(stdout, "\nEntering main loop\n");
@@ -259,6 +259,10 @@ void init_core()
   #endif
 }
 
+/**
+ * @brief Fixes and bounds the primitives before flushing the grid data to the grid.5f file in the dumps directory
+ * 
+ */
 void init_final()
 {
   #if RADIATION

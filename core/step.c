@@ -202,14 +202,12 @@ double fluxcalc(grid_prim_type Pr)
     #pragma omp for collapse(2) nowait
     JSLOOP(-1,N2) {
       KSLOOP(-1,N3) {
-
         ISLOOP(-NG,N1-1+NG) PLOOP Ptmp[i][ip] = Pr[i][j][k][ip];
         
         reconstruct(Ptmp, N1, P_l, P_r);
 
         ISLOOP(0,N1) {
-          lr_to_flux(P_r[i-1], P_l[i], &(ggeom[i][j][FACE1]), 1, F1[i][j][k],
-            &cij);
+          lr_to_flux(P_r[i-1], P_l[i], &(ggeom[i][j][FACE1]), 1, F1[i][j][k], &cij);
           cmax1 = (cij > cmax1 ? cij : cmax1);
         } // ISLOOP
       } // KSLOOP
@@ -224,8 +222,7 @@ double fluxcalc(grid_prim_type Pr)
         reconstruct(Ptmp, N2, P_l, P_r);
 
         JSLOOP(0,N2) {
-          lr_to_flux(P_r[j-1], P_l[j], &(ggeom[i][j][FACE2]), 2, F2[i][j][k],
-            &cij);
+          lr_to_flux(P_r[j-1], P_l[j], &(ggeom[i][j][FACE2]), 2, F2[i][j][k], &cij);
           cmax2 = (cij > cmax2 ? cij : cmax2);
         } // JSLOOP
       } // KSLOOP
@@ -240,8 +237,7 @@ double fluxcalc(grid_prim_type Pr)
         reconstruct(Ptmp, N3, P_l, P_r);
 
         KSLOOP(0,N3) {
-          lr_to_flux(P_r[k-1], P_l[k], &(ggeom[i][j][FACE3]), 3, F3[i][j][k],
-            &cij);
+          lr_to_flux(P_r[k-1], P_l[k], &(ggeom[i][j][FACE3]), 3, F3[i][j][k], &cij);
           cmax3 = (cij > cmax3 ? cij : cmax3);
         } // KSLOOP
       } // JSLOOP
@@ -301,6 +297,16 @@ void flux_ct(grid_prim_type F1, grid_prim_type F2, grid_prim_type F3)
   } // omp parallel
 }
 
+/**
+ * @brief Uses the Local Lax-Friedrichs flux method to calculate the Flux at a gridpoint given the metric and the primitives at the left and right of the grid zone
+ * 
+ * @param P_l Primitives at the left edge
+ * @param P_r Primitives at the right edge
+ * @param geom ggeom struct at the center
+ * @param dir direction
+ * @param Flux Empty flux matrix to store results
+ * @param maxSpeed Empty var to store the maximum speed
+ */
 void lr_to_flux(double P_l[NVAR], double P_r[NVAR], struct of_geom *geom,
   int dir, double Flux[NVAR], double *maxSpeed)
 {

@@ -128,6 +128,12 @@ void bl_coord(const double X[NDIM], double *r, double *th)
 }
 
 // Cartesian coordinate Xcart = {t,x,y,z} of point X
+/**
+ * @brief Converts coordinates X to cartesian coordinates Xcart. If METRIC == CARTESIAN, Xcart == X
+ * 
+ * @param X Coordinates to convert (can be in cartesian, MKS or MMKS)
+ * @param Xcart 1x4 matrix to fill with converted coordinates
+ */
 void cart_coord(const double X[NDIM], double Xcart[NDIM])
 {
   Xcart[0] = X[0]; // t

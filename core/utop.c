@@ -13,6 +13,14 @@
 #define ITERMAX 8
 #define DEL 1.e-5
 
+/**
+ * @brief Calculate primitives based on the fluxes
+ * 
+ * @param U Flux matrix to invert
+ * @param geom ggeom at the desired location
+ * @param prim Matrix to store the calculated primitives
+ * @return int Success/failure flag
+ */
 int Utoprim(double U[NVAR], struct of_geom *geom, double prim[NVAR])
 {
   int iter, eflag;

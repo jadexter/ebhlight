@@ -77,7 +77,13 @@ void conn_func(double *X, struct of_geom *geom, double conn[][NDIM][NDIM]) {
   }
 }
 
-// Lower a contravariant rank-1 tensor to a covariant one
+/**
+ * @brief Lower a contravariant rank-1 tensor to a covariant one
+ * 
+ * @param ucon 
+ * @param gcov 
+ * @param ucov 
+ */
 void lower(double ucon[NDIM], double gcov[NDIM][NDIM], double ucov[NDIM])
 {
   ucov[0] = gcov[0][0] * ucon[0]
@@ -98,7 +104,13 @@ void lower(double ucon[NDIM], double gcov[NDIM][NDIM], double ucov[NDIM])
       + gcov[3][3] * ucon[3];
 }
 
-// Raise a covariant rank-1 tensor to a contravariant one
+/**
+ * @brief Raise a covariant rank-1 tensor to a contravariant one
+ * 
+ * @param ucov 
+ * @param gcon 
+ * @param ucon 
+ */
 void raise(double ucov[NDIM], double gcon[NDIM][NDIM], double ucon[NDIM])
 {
   ucon[0] = gcon[0][0] * ucov[0]
