@@ -14,9 +14,9 @@
 #define DEL 1.e-5
 
 /**
- * @brief Calculate primitives based on the fluxes
+ * @brief Calculate primitives based on the conserved quantities
  * 
- * @param U Flux matrix to invert
+ * @param U Conserved variables to invert
  * @param geom ggeom at the desired location
  * @param prim Matrix to store the calculated primitives
  * @return int Success/failure flag

@@ -30,7 +30,7 @@ void step()
     }
   }
 
-  // Predictor step
+  // Predictor step - advance half a timestep
   ndt = advance(P, P, 0.5*dt, Ph, 0);
   #if ELECTRONS
   heat_electrons(P, P, Ph, 0.5*dt);
@@ -108,6 +108,16 @@ void step()
   dt = mpi_min(dt);
 }
 
+/**
+ * @brief Advances the Primitive matrix forward by a timestep dt. Does F(Pb) -> U(F) -> Pf(U)
+ * 
+ * @param Pi Current integer step primitives
+ * @param Pb Previous half-step primitives
+ * @param Dt Timestep over which to evolve Pi to Pf
+ * @param Pf Matrix to store final primitive values
+ * @param stage Unused
+ * @return double ndt = 1/(1/ndt1 + 1/ndt2 + 1/ndt3)
+ */
 double advance(grid_prim_type Pi, grid_prim_type Pb, double Dt,
   grid_prim_type Pf, int stage)
 {
@@ -188,6 +198,12 @@ void apply_rad_force(grid_prim_type Pr, double Dt)
 }
 #endif
 
+/**
+ * @brief Find the fluxes from the primitives and populate F1, F2, and F3 with flux in each spatial dimension
+ * 
+ * @param Pr Primitives at each gridpoint
+ * @return double ndt = 1/(1/ndt1 + 1/ndt2 + 1/ndt3)
+ */
 double fluxcalc(grid_prim_type Pr)
 {
   double P_l[NMAX+2*NG][NVAR], P_r[NMAX+2*NG][NVAR];
@@ -256,6 +272,13 @@ double fluxcalc(grid_prim_type Pr)
   return (1./(1./ndt1 + 1./ndt2 + 1./ndt3));
 }
 
+/**
+ * @brief Employs the flux-interpolated constrained transport scheme from Toth 2000. This smooths the fluxes with a special (diffusive) operator and maintains the no monopoles condition 
+ * 
+ * @param F1 Flux in direction 1 to be filled with smoothed values
+ * @param F2 Flux in direction 2 to be filled with smoothed values
+ * @param F3 Flux in direction 3 to be filled with smoothed values
+ */
 void flux_ct(grid_prim_type F1, grid_prim_type F2, grid_prim_type F3)
 {
   static double emf1[N1 + 2*NG][N2 + 2*NG][N3 + 2*NG];
@@ -266,6 +289,7 @@ void flux_ct(grid_prim_type F1, grid_prim_type F2, grid_prim_type F3)
   #pragma omp parallel
   {
     #pragma omp for collapse(3)
+    // Eq. 25 in Gammie 03
     ZSLOOP(0, N1, 0, N2, 0, N3) {
       emf3[i][j][k] =  0.25*(F1[i][j][k][B2] + F1[i][j - 1][k][B2]
                            - F2[i][j][k][B1] - F2[i - 1][j][k][B1]);
@@ -332,11 +356,12 @@ void lr_to_flux(double P_l[NVAR], double P_r[NVAR], struct of_geom *geom,
   mhd_vchar(P_l, &state_l, geom, dir, &cmax_l, &cmin_l);
   mhd_vchar(P_r, &state_r, geom, dir, &cmax_r, &cmin_r);
 
+  // This makes the sumption that cmax ~= cmin
   cmax = fabs(MY_MAX(MY_MAX(0., cmax_l), cmax_r));
   cmin = fabs(MY_MAX(MY_MAX(0., -cmin_l), -cmin_r));
   ctop = MY_MAX(cmax, cmin);
 
-  PLOOP Flux[ip] = 0.5*(F_l[ip] + F_r[ip] - ctop*(U_r[ip] - U_l[ip]));
+  PLOOP Flux[ip] = 0.5*(F_l[ip] + F_r[ip] - ctop*(U_r[ip] - U_l[ip])); // Eq. 22 of Gammie 03
 
   *maxSpeed = ctop;
 }

@@ -90,7 +90,17 @@ void mhd_calc(double *Pr, int dir, struct of_state *q, double *mhd)
   }
 }
 
-// Source terms for equations of motion
+// 
+/**
+ * @brief Source terms for equations of motion. Calculate dU[UU,U1,U2,U3] from stress-energy tensor and connection
+ * 
+ * @param Ph Half-step primitives
+ * @param geom Geometry
+ * @param ii Grid index 1
+ * @param jj Grid index 2
+ * @param dU Vector to fill with dU
+ * @param Dt Unused
+ */
 void source(double *Ph, struct of_geom *geom, int ii, int jj, double *dU,
   double Dt)
 {
@@ -118,7 +128,13 @@ void source(double *Ph, struct of_geom *geom, int ii, int jj, double *dU,
   PLOOP dU[ip] *= geom->g;
 }
 
-// Returns b.b (twice magnetic pressure)
+/**
+ * @brief calculates b.b (twice magnetic pressure)
+ * 
+ * @param Pr Primitives
+ * @param geom Geometry
+ * @return double dot(bcon, bcov)
+ */
 double bsq_calc(double *Pr, struct of_geom *geom)
 {
   struct of_state q;

@@ -304,8 +304,14 @@ void area_map(int i, int j, int k, grid_prim_type prim)
 
   fprintf(stderr, "****************\n");
 }
-
-// Evaluate flux based diagnostics; put results in global variables
+ 
+/**
+ * @brief Evaluate flux based diagnostics; put results in global variables
+ * 
+ * @param F1 
+ * @param F2 
+ * @param F3 
+ */
 void diag_flux(grid_prim_type F1, grid_prim_type F2, grid_prim_type F3)
 {
   mdot = edot = ldot = 0.;
