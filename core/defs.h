@@ -42,7 +42,7 @@ grid_prim_type psupersave;
 grid_double_type Qvisc_e, Qvisc_p, Qcoul;
 #endif // ELECTRONS
 #if COOLING
-grid_double_type Qcool;
+grid_double_type Qcool, test_quantity, Tel_AH, Tel_JD;
 #endif //COOLING
 
 double conn[N1 + 2*NG][N2 + 2*NG][NDIM][NDIM][NDIM];
@@ -139,4 +139,3 @@ double fel0;
 
 int global_start[NDIM];
 int global_stop[NDIM];
-

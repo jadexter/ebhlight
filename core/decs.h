@@ -224,7 +224,7 @@ extern grid_int_type Nem, Nabs, Nsc;
 extern grid_double_type Qvisc_e, Qvisc_p, Qcoul;
 #endif // ELECTRONS
 #if COOLING
-extern grid_double_type Qcool;
+extern grid_double_type Qcool, test_quantity, Tel_AH, Tel_JD;
 #endif // COOLING
 
 /*******************************************************************************
@@ -482,11 +482,11 @@ void record_superphoton(double X[NDIM], struct of_photon *ph);
 // electrons.c
 #if ELECTRONS
 void init_electrons();
-void heat_electrons(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, 
+void heat_electrons(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf,
   double Dt);
 double get_fel(int i, int j, int k, double p[NVAR]);
 #if RADIATION || COOLING
-void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, 
+void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf,
   double Dt);
 void apply_rad_force_e(grid_prim_type Prh, grid_prim_type Pr,
   grid_fourvector_type radG, double Dt);
@@ -647,7 +647,7 @@ void copy_photon(struct of_photon *ph, struct of_photon *phc);
 void print_ph_diag(struct of_photon *ph);
 int get_X_K_interp(struct of_photon *ph, double t_interp, double X[NDIM],
   double Kcov[NDIM], double Kcon[NDIM]);
-int push_to_X_K(double t, struct of_photon *ph, double X[NDIM],                  
+int push_to_X_K(double t, struct of_photon *ph, double X[NDIM],
   double Kcov[NDIM], double Kcon[NDIM]);
 int to_be_pushed(double t, double dt, struct of_photon *ph);
 void swap_ph(struct of_photon **donor, struct of_photon **recipient);
