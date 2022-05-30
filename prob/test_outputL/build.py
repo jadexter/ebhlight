@@ -5,8 +5,8 @@ PROB = 'torus'
                          ### COMPILE TIME PARAMETERS ###
 
 # SPATIAL RESOLUTION AND MPI DECOMPOSITION
-bhl.config.set_cparm('N1TOT', 128)
-bhl.config.set_cparm('N2TOT', 128)
+bhl.config.set_cparm('N1TOT', 64)
+bhl.config.set_cparm('N2TOT', 64)
 bhl.config.set_cparm('N3TOT', 1)
 bhl.config.set_cparm('N1CPU', 1)
 bhl.config.set_cparm('N2CPU', 1)
@@ -60,7 +60,7 @@ bhl.config.set_cparm('X3R_RAD_BOUND', 'BC_PERIODIC')
                            ### RUNTIME PARAMETERS ###
 bhl.config.set_rparm('Tel_target', 'double', default=1e+9)
 bhl.config.set_rparm('Tel_rslope', 'double', default=0.0)
-bhl.config.set_rparm('tf', 'double', default = 3.001e4)
+bhl.config.set_rparm('tf', 'double', default = 20.0)
 bhl.config.set_rparm('dt', 'double', default = 1.e-6)
 bhl.config.set_rparm('rin', 'double', default = 20)     # MEDIUM_DISK 10
 bhl.config.set_rparm('rmax', 'double', default = 41)    # MEDIUM_DISK 20
@@ -82,10 +82,10 @@ bhl.config.set_rparm('t0_tune_scatt', 'double', 500)
 bhl.config.set_rparm('MAD', 'int', default = 1)
 bhl.config.set_rparm('BHflux', 'double', default = 0.)
 bhl.config.set_rparm('beta', 'double', default = 100.)
-bhl.config.set_rparm('numin_emiss', 'double', default=1.e10) 
-bhl.config.set_rparm('numax_emiss', 'double', default=1.e16) 
-bhl.config.set_rparm('numin_spec', 'double', default=1.e10) 
-bhl.config.set_rparm('numax_spec', 'double', default=1.e25) 
+bhl.config.set_rparm('numin_emiss', 'double', default=1.e10)
+bhl.config.set_rparm('numax_emiss', 'double', default=1.e16)
+bhl.config.set_rparm('numin_spec', 'double', default=1.e10)
+bhl.config.set_rparm('numax_spec', 'double', default=1.e25)
 bhl.config.set_rparm('tp_over_te', 'double', default=3)
 bhl.config.set_rparm('nph_per_proc', 'double', default=1.e5)
 bhl.config.set_rparm('cour', 'double', default=0.9)
@@ -93,4 +93,3 @@ bhl.config.set_rparm('cour', 'double', default=0.9)
                          ### CONFIGURE AND COMPILE  ###
 
 bhl.build(PROB)
-
