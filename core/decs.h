@@ -317,6 +317,10 @@ extern int nthreads;
 extern double game, gamp;
 extern double fel0;
 #endif
+// cooling
+#if COOLING
+extern double tcool0;
+#endif
 
 // Set global variables that indicate current local metric, etc.
 struct of_geom {
@@ -494,6 +498,7 @@ void apply_rad_force_e(grid_prim_type Prh, grid_prim_type Pr,
 #if COOLING
 void electron_cooling(grid_prim_type Ph, double t, double dt);
 void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt);
+double get_tcool(double r);
 #endif
 void fixup_electrons(grid_prim_type p);
 #endif

@@ -23,6 +23,7 @@ bhl.config.set_cparm('ELECTRONS', True)
 bhl.config.set_cparm('SUPPRESS_HIGHB_HEAT', False)
 bhl.config.set_cparm('BETA_HEAT', 3)
 bhl.config.set_cparm('COULOMB', True)
+bhl.config.set_cparm('TCOOL', 1)
 
 # FLUID
 bhl.config.set_cparm('RECONSTRUCTION', 'WENO')
@@ -60,6 +61,7 @@ bhl.config.set_cparm('X3R_RAD_BOUND', 'BC_PERIODIC')
                            ### RUNTIME PARAMETERS ###
 bhl.config.set_rparm('Tel_target', 'double', default=1e+9)
 bhl.config.set_rparm('Tel_rslope', 'double', default=0.0)
+bhl.config.set_rparm('tcool0', 'double', default=1.0)
 bhl.config.set_rparm('tf', 'double', default = 20.0)
 bhl.config.set_rparm('dt', 'double', default = 1.e-6)
 bhl.config.set_rparm('rin', 'double', default = 20)     # MEDIUM_DISK 10

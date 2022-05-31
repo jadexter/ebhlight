@@ -297,7 +297,7 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   struct of_geom *geom = &ggeom[i][j][CENT];
   struct of_state q;
   double X[NDIM], r, th;
-  double thetae, uel, Tel, Y, L, Omega, sigma, bsq, Tel_star, Tel2, tcool;
+  double thetae, uel, Tel, Y, L, sigma, bsq, Tel_star;
   double Gcov[NDIM];
   // get_state important to update ucov in Gcov!
   get_state(Ph, geom, &q);
@@ -309,9 +309,10 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   sigma = bsq/Ph[RHO];
 
   // JD: presumably causes problems in any non-BH problem
-  Omega=1./(pow(r,3./2.)+a);
-  tcool = 1.0/Omega;
+  // Omega=1./(pow(r,3./2.)+a);
+  // tcool = 1.0/Omega;
   // tcool = 0.001; // AMH: testing purposes
+  double tcool = get_tcool(r);
 
   uel = 1./(game-1.)*Ph[KEL]*pow(Ph[RHO],game);
   // Calculate current electron temperature...
@@ -319,7 +320,7 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   thetae = MP/ME*Ph[KEL]*pow(Ph[RHO],game-1.);
   Tel = thetae*ME*CL*CL/KBOL;
   // AMH: some more testing
-  Tel2 = (game-1.)*uel/Ph[RHO]; // JD way...missing MP/ME?
+  // Tel2 = (game-1.)*uel/Ph[RHO]; // JD way...missing MP/ME?
 
   // calculate cooling rate L following Noble+
   Tel_star = Tel_target*pow(r,-1.*Tel_rslope);
@@ -343,7 +344,7 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   }
   // check for supercooling
   if ((uel < dt*L)) {
-    fprintf(stdout, "supercooling! %g %g %g %g \n", Y, Omega, uel, L);
+    fprintf(stdout, "supercooling! %g %g %g \n", Y, uel, L);
   }
   // AMH added output of L
   Qcool[i][j][k] = L;
@@ -354,6 +355,22 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
     Gcov[mu] = -L*q.ucov[mu]; // Noble+ 2009 Eqns. 12-13
     radG[i][j][k][mu] = Gcov[mu]*ggeom[i][j][CENT].g;
   }
+}
+
+double get_tcool(double r){
+  #if TCOOL == 0
+  // tcool = constant
+  return tcool0;
+  #endif
+
+  double tcool;
+  # if TCOOL == 1
+  // Set cooling time according to the orbital time Omega
+  // JD: presumably causes problems in any non-BH problem
+  double Omega=1./(pow(r,3./2.)+a);
+  tcool = 1.0/Omega;
+  #endif
+  return tcool;
 }
 #endif // COOLING
 

@@ -137,5 +137,9 @@ double game, gamp;
 double fel0;
 #endif
 
+#if COOLING
+double tcool0;
+#endif
+
 int global_start[NDIM];
 int global_stop[NDIM];
