@@ -416,7 +416,6 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   for (int mu = 0; mu < NDIM; mu++) {
     Gcov[mu] = -L*q.ucov[mu]; // Noble+ 2009 Eqns. 12-13
     radG[i][j][k][mu] = Gcov[mu]*ggeom[i][j][CENT].g;
->>>>>>> 63a856be247f9c81a675a3f7ac337a6727756314
   }
 }
 #endif // COOLING
