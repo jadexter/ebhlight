@@ -599,6 +599,7 @@ void dump()
   #endif
   #if COOLING
   int has_cooling = COOLING; WRITE_HDR(has_cooling, TYPE_INT);
+  int has_tcool = TCOOL; WRITE_HDR(has_tcool, TYPE_INT);
   #endif
 
   WRITE_HDR(metric, TYPE_STR);
@@ -668,6 +669,9 @@ void dump()
   #if COOLING
   WRITE_HDR(Tel_target, TYPE_DBL);
   WRITE_HDR(Tel_rslope, TYPE_DBL);
+  #if TCOOL == 0
+  WRITE_HDR(tcool0, TYPE_DBL);
+  #endif
   #endif
 
   hdf5_make_directory("geom");
