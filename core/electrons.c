@@ -287,75 +287,138 @@ void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
 #if COOLING
  void electron_cooling(grid_prim_type Ph, double t, double dt)
  {
-   struct of_geom *geom;
-   struct of_state q;
-   double thetae, uel, Tel, Y, L, Omega, sigma, bsq, Tel_star, Tel2, tcool;
-   double X[NDIM], r, th;
-   double Gcov[NDIM];
+   // struct of_geom *geom;
+   // struct of_state q;
+   // double thetae, uel, Tel, Y, L, Omega, sigma, bsq, Tel_star, Tel2, tcool;
+   // double Gcov[NDIM];
 #pragma omp parallel for collapse(3) schedule(dynamic)
    ZLOOP {
-     geom = &ggeom[i][j][CENT];
-     // get_state important to update ucov in Gcov!
-     get_state(Ph[i][j][k], geom, &q);
-     coord(i, j, k, CENT, X);
-     bl_coord(X, &r, &th);
+     electron_cooling_zone(i, j, k, Ph[i][j][k], dt);
+     // geom = &ggeom[i][j][CENT];
+     // get_state(Ph[i][j][k], geom, &q);
+     // coord(i, j, k, CENT, X);
+     // bl_coord(X, &r, &th);
      // fprintf(stdout, "coords: %i %i %i %g %g %g %g \n",i,j,k,X[0],X[1],r,th);
-     //approximate r
-     // r = pow(ggeom[i][j][CENT].g,1./3.);
-
-     bsq = bsq_calc(Ph[i][j][k], geom);
-     sigma = bsq/Ph[i][j][k][RHO];
-
-     // JD: presumably causes problems in any non-BH problem
-     Omega=1./(pow(r,3./2.)+a);
-     tcool = 1.0/Omega;
-     // tcool = 0.001; // AMH: testing purposes
-
-     uel = 1./(game-1.)*Ph[i][j][k][KEL]*pow(Ph[i][j][k][RHO],game);
-     // Calculate current electron temperature...
-     // Still confused about inclusion/exclusion of MP/ME
-     thetae = MP/ME*Ph[i][j][k][KEL]*pow(Ph[i][j][k][RHO],game-1.);
-     Tel = thetae*ME*CL*CL/KBOL;
-     // AMH: some more testing
-     Tel2 = (game-1.)*uel/Ph[i][j][k][RHO]; // JD way...missing MP/ME?
-
-     // calculate cooling rate L following Noble+
-     Tel_star = Tel_target*pow(r,-1.*Tel_rslope);
-     Y = Tel/Tel_star-1.;
-     // this should cool the *electrons* e.g. cooling rate set by their uel not UU
-     //L = Omega*uel*pow((Y*(1.+sign(Y))),1./2.);
-     //     L = Omega*uel*(Y+abs(Y));
-     //     L = Omega*uel*log(1.+(Y+abs(Y)));
-     // JD trying very explicit version to avoid any chance of spurious heating from negative L!
-     L = 0.;
-     //limit Y for now and don't cool sigma > 1
-     Y = MY_MIN(Y, 1000.);
-     // AMH for testing
-     test_quantity[i][j][k] = uel;
-     if ((!isnan(Tel)) && (Y > 0.) && (uel > 0.) && (Tel > 0.) && (sigma < 1.)) {
-       // fprintf(stdout, "In loop");
-       L = 2.*uel*sqrt(Y)/tcool;
-       // L = 0.001; // AMH: testing purposes
-     }
-     else {
-       L = 0.0;
-     }
-     // check for supercooling
-     if ((uel < dt*L)) {
-       fprintf(stdout, "supercooling! %g %g %g %g \n", Y, Omega, uel, L);
-     }
-     // AMH added output of L
-     Qcool[i][j][k] = L;
-
-     // Implement cooling as a passive sink in local energy conservation (Gcov)
-     // update radG, the radiation four-force density (Ryan+ 2015 Eq. 4)
-      for (int mu = 0; mu < NDIM; mu++) {
-        Gcov[mu] = -L*q.ucov[mu]; // Noble+ 2009 Eqns. 12-13
-        radG[i][j][k][mu] = Gcov[mu]*ggeom[i][j][CENT].g;
-      }
+     // //approximate r
+     // // r = pow(ggeom[i][j][CENT].g,1./3.);
+     //
+     // bsq = bsq_calc(Ph[i][j][k], geom);
+     // sigma = bsq/Ph[i][j][k][RHO];
+     //
+     // // JD: presumably causes problems in any non-BH problem
+     // Omega=1./(pow(r,3./2.)+a);
+     // tcool = 1.0/Omega;
+     // // tcool = 0.001; // AMH: testing purposes
+     //
+     // uel = 1./(game-1.)*Ph[i][j][k][KEL]*pow(Ph[i][j][k][RHO],game);
+     // // Calculate current electron temperature...
+     // // Still confused about inclusion/exclusion of MP/ME
+     // thetae = MP/ME*Ph[i][j][k][KEL]*pow(Ph[i][j][k][RHO],game-1.);
+     // Tel = thetae*ME*CL*CL/KBOL;
+     // // AMH: some more testing
+     // Tel2 = (game-1.)*uel/Ph[i][j][k][RHO]; // JD way...missing MP/ME?
+     //
+     // // calculate cooling rate L following Noble+
+     // Tel_star = Tel_target*pow(r,-1.*Tel_rslope);
+     // Y = Tel/Tel_star-1.;
+     // // this should cool the *electrons* e.g. cooling rate set by their uel not UU
+     // //L = Omega*uel*pow((Y*(1.+sign(Y))),1./2.);
+     // //     L = Omega*uel*(Y+abs(Y));
+     // //     L = Omega*uel*log(1.+(Y+abs(Y)));
+     // // JD trying very explicit version to avoid any chance of spurious heating from negative L!
+     // L = 0.;
+     // //limit Y for now and don't cool sigma > 1
+     // Y = MY_MIN(Y, 1000.);
+     // // AMH for testing
+     // test_quantity[i][j][k] = uel;
+     // if ((!isnan(Tel)) && (Y > 0.) && (uel > 0.) && (Tel > 0.) && (sigma < 1.)) {
+       // // fprintf(stdout, "In loop");
+       // L = 2.*uel*sqrt(Y)/tcool;
+       // // L = 0.001; // AMH: testing purposes
+     // }
+     // else {
+     // L = 0.0;
+     // }
+     // // check for supercooling
+     // if ((uel < dt*L)) {
+     // fprintf(stdout, "supercooling! %g %g %g %g \n", Y, Omega, uel, L);
+     // }
+     // // AMH added output of L
+     // Qcool[i][j][k] = L;
+     //
+     // // Implement cooling as a passive sink in local energy conservation (Gcov)
+     // // update radG, the radiation four-force density (Ryan+ 2015 Eq. 4)
+     // for (int mu = 0; mu < NDIM; mu++) {
+     // Gcov[mu] = -L*q.ucov[mu]; // Noble+ 2009 Eqns. 12-13
+     // radG[i][j][k][mu] = Gcov[mu]*ggeom[i][j][CENT].g;
+     // }
   }
 }
-#endif
+
+void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
+  struct of_geom *geom = &ggeom[i][j][CENT];
+  struct of_state q;
+  double X[NDIM], r, th;
+  double thetae, uel, Tel, Y, L, Omega, sigma, bsq, Tel_star, Tel2, tcool;
+  double Gcov[NDIM];
+  // get_state important to update ucov in Gcov!
+  get_state(Ph, geom, &q);
+  coord(i, j, k, CENT, X);
+  bl_coord(X, &r, &th);
+  fprintf(stdout, "coords: %i %i %i %g %g %g %g \n",i,j,k,X[0],X[1],r,th);
+
+  bsq = bsq_calc(Ph, geom);
+  sigma = bsq/Ph[RHO];
+
+  // JD: presumably causes problems in any non-BH problem
+  Omega=1./(pow(r,3./2.)+a);
+  tcool = 1.0/Omega;
+  // tcool = 0.001; // AMH: testing purposes
+
+  uel = 1./(game-1.)*Ph[KEL]*pow(Ph[RHO],game);
+  // Calculate current electron temperature...
+  // Still confused about inclusion/exclusion of MP/ME
+  thetae = MP/ME*Ph[KEL]*pow(Ph[RHO],game-1.);
+  Tel = thetae*ME*CL*CL/KBOL;
+  // AMH: some more testing
+  Tel2 = (game-1.)*uel/Ph[RHO]; // JD way...missing MP/ME?
+
+  // calculate cooling rate L following Noble+
+  Tel_star = Tel_target*pow(r,-1.*Tel_rslope);
+  Y = Tel/Tel_star-1.;
+  // this should cool the *electrons* e.g. cooling rate set by their uel not UU
+  //L = Omega*uel*pow((Y*(1.+sign(Y))),1./2.);
+  //     L = Omega*uel*(Y+abs(Y));
+  //     L = Omega*uel*log(1.+(Y+abs(Y)));
+  // JD trying very explicit version to avoid any chance of spurious heating from negative L!
+  L = 0.;
+  //limit Y for now and don't cool sigma > 1
+  Y = MY_MIN(Y, 1000.);
+  // AMH for testing
+  test_quantity[i][j][k] = uel;
+  if ((!isnan(Tel)) && (Y > 0.) && (uel > 0.) && (Tel > 0.) && (sigma < 1.)) {
+    // fprintf(stdout, "In loop");
+    L = 2.*uel*sqrt(Y)/tcool;
+    // L = 0.001; // AMH: testing purposes
+  }
+  else {
+    L = 0.0;
+  }
+  // check for supercooling
+  if ((uel < dt*L)) {
+    fprintf(stdout, "supercooling! %g %g %g %g \n", Y, Omega, uel, L);
+  }
+  // AMH added output of L
+  Qcool[i][j][k] = L;
+
+  // Implement cooling as a passive sink in local energy conservation (Gcov)
+  // update radG, the radiation four-force density (Ryan+ 2015 Eq. 4)
+  for (int mu = 0; mu < NDIM; mu++) {
+    Gcov[mu] = -L*q.ucov[mu]; // Noble+ 2009 Eqns. 12-13
+    radG[i][j][k][mu] = Gcov[mu]*ggeom[i][j][CENT].g;
+  }
+}
+#endif // COOLING
 
 void apply_rad_force_e(grid_prim_type Prh, grid_prim_type Pr,
   grid_fourvector_type radG, double Dt)
