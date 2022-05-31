@@ -68,7 +68,6 @@ param_template.dat
 # SLURM
 out_*
 err_*
-job_*
 compile.sh
 
 # Debug files
