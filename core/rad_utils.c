@@ -12,7 +12,7 @@
 void set_units()
 {
   #if METRIC == MKS || METRIC == MMKS
-  L_unit = GNEWT*Mbh/(CL*CL);
+  L_unit = GNEWT*Mbh/(CL*CL); // rg
   #endif
   T_unit = L_unit/CL;
   RHO_unit = M_unit*pow(L_unit,-3.);
@@ -51,7 +51,7 @@ void init_rad(grid_prim_type Prad)
 void init_superphoton_resolution()
 {
   init_make_statics();
-  
+
   made_tune_proc = abs_tune_proc = scatt_tune_proc = 0;
 
   if (tune_emiss < 0) {
@@ -349,7 +349,7 @@ int get_X_K_interp(struct of_photon *ph, double t_interp, double X[NDIM],
 
   double kdotk = dot(Kcon, Kcov);
   int status;
-  
+
   // If interpolation is terrible, we need to replace with an honest push
   // Also do this if there aren't yet three support points
   if (fabs((kdotk-KdotKprev)/(Kcov[0]*Kcov[0])) > 1e-3 || ph->X[0][0] < 0) {
@@ -360,8 +360,8 @@ int get_X_K_interp(struct of_photon *ph, double t_interp, double X[NDIM],
         Kcon[mu] = ph->Kcon[0][mu];
       }
       double KdotKprev = dot(Kcov, Kcon);
-      status = push_X_K(X, Kcov, Kcon, KdotKprev, 
-        t_interp-ph->X[0][0]); 
+      status = push_X_K(X, Kcov, Kcon, KdotKprev,
+        t_interp-ph->X[0][0]);
     } else if (ph->X[1][0] > 0) {
       for (int mu = 0; mu < NDIM; mu++) {
         X[mu] = ph->X[1][mu];
@@ -369,7 +369,7 @@ int get_X_K_interp(struct of_photon *ph, double t_interp, double X[NDIM],
         Kcon[mu] = ph->Kcon[1][mu];
       }
       double KdotKprev = dot(Kcov, Kcon);
-      status = push_X_K(X, Kcov, Kcon, KdotKprev, 
+      status = push_X_K(X, Kcov, Kcon, KdotKprev,
         t_interp-ph->X[1][0]);
     } else {
       for (int mu = 0; mu < NDIM; mu++) {
@@ -378,7 +378,7 @@ int get_X_K_interp(struct of_photon *ph, double t_interp, double X[NDIM],
         Kcon[mu] = ph->Kcon[2][mu];
       }
       double KdotKprev = dot(Kcov, Kcon);
-      status = push_X_K(X, Kcov, Kcon, KdotKprev, 
+      status = push_X_K(X, Kcov, Kcon, KdotKprev,
         t_interp-ph->X[2][0]);
     }
     if (status == PUSH_FAIL) {
@@ -394,7 +394,7 @@ int get_X_K_interp(struct of_photon *ph, double t_interp, double X[NDIM],
   return SPH_INTERP_SUCCESS;
 }
 
-int push_to_X_K(double t, struct of_photon *ph, double X[NDIM], 
+int push_to_X_K(double t, struct of_photon *ph, double X[NDIM],
   double Kcov[NDIM], double Kcon[NDIM])
 {
   int status;
@@ -405,7 +405,7 @@ int push_to_X_K(double t, struct of_photon *ph, double X[NDIM],
       Kcon[mu] = ph->Kcon[0][mu];
     }
     double KdotKprev = dot(Kcov, Kcon);
-    status = push_X_K(X, Kcov, Kcon, KdotKprev, t - ph->X[0][0]); 
+    status = push_X_K(X, Kcov, Kcon, KdotKprev, t - ph->X[0][0]);
   } else {
     for (int mu = 0; mu < NDIM; mu++) {
       X[mu] = ph->X[1][mu];
@@ -449,7 +449,7 @@ void swap_ph(struct of_photon **donor, struct of_photon **recipient)
 }
 
 // These atomic calls can be very slow on certain problems
-void set_Rmunu() 
+void set_Rmunu()
 {
   memset((void*)Rmunu, 0,
     (N1+2*NG)*(N2+2*NG)*(N3+2*NG)*NDIM*NDIM*sizeof(double));
@@ -487,7 +487,7 @@ void set_Rmunu()
 void get_nuLnu_bin(double X[NDIM], int *thbin, int *phibin)
 {
   double r, th, phi;
-  bl_coord(X, &r, &th); 
+  bl_coord(X, &r, &th);
   phi = fmod(X[3], 2.*M_PI);
   //phi = X[3] % (2.*M_PI);
 
@@ -498,4 +498,3 @@ void get_nuLnu_bin(double X[NDIM], int *thbin, int *phibin)
   *phibin = (int)(th/dth);
 }
 #endif // RADIATION
-

@@ -54,8 +54,10 @@ void step()
   bound_superphotons(t, dt);
   #endif
   // Cooling step to set radG
+  #if ELECTRONS
   #if COOLING
   electron_cooling(Ph, t, dt);
+  #endif
   #endif
 
   // Corrector step
@@ -92,9 +94,9 @@ void step()
 
   // Increment time
   t += dt;
-  
+
   #if RADIATION
-  ndt = cour*dt_light_min; 
+  ndt = cour*dt_light_min;
   #endif
 
   // Set next timestep
@@ -105,10 +107,10 @@ void step()
   dt = ndt;
 
   // Don't step beyond end of run
-  if (t + dt > tf) {                                                         
-    dt = tf - t;                                                             
+  if (t + dt > tf) {
+    dt = tf - t;
   }
-  
+
   dt = mpi_min(dt);
 }
 
@@ -166,7 +168,7 @@ void apply_rad_force(grid_prim_type Pr, double Dt)
 {
   double U[NVAR];
   struct of_state q;
-  
+
   timer_start(TIMER_UPDATE);
 
   #pragma omp parallel for schedule(guided) private (q, U) collapse(3)
@@ -183,7 +185,7 @@ void apply_rad_force(grid_prim_type Pr, double Dt)
     }
 
     pflag[i][j][k] = Utoprim(U, &(ggeom[i][j][CENT]), Pr[i][j][k]);
-    
+
     if(pflag[i][j][k]) {
       fail_save[i][j][k] = 1;
     }
@@ -208,7 +210,7 @@ double fluxcalc(grid_prim_type Pr)
       KSLOOP(-1,N3) {
 
         ISLOOP(-NG,N1-1+NG) PLOOP Ptmp[i][ip] = Pr[i][j][k][ip];
-        
+
         reconstruct(Ptmp, N1, P_l, P_r);
 
         ISLOOP(0,N1) {
@@ -338,4 +340,3 @@ void lr_to_flux(double P_l[NVAR], double P_r[NVAR], struct of_geom *geom,
 
   *maxSpeed = ctop;
 }
-

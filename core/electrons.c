@@ -311,20 +311,17 @@ void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
      tcool = 1.0/Omega;
      // tcool = 0.001; // AMH: testing purposes
 
-     // Still confused about inclusion/exclusion of MP/ME
      uel = 1./(game-1.)*Ph[i][j][k][KEL]*pow(Ph[i][j][k][RHO],game);
-     // calculate current electron temperature
+     // Calculate current electron temperature...
+     // Still confused about inclusion/exclusion of MP/ME
      thetae = MP/ME*Ph[i][j][k][KEL]*pow(Ph[i][j][k][RHO],game-1.);
      Tel = thetae*ME*CL*CL/KBOL;
      // AMH: some more testing
-     Tel2 = (game-1.)*uel/Ph[i][j][k][RHO]; // JD way
-     Tel_AH[i][j][k] = thetae;
-     Tel_JD[i][j][k] = Tel2*MP/ME;
+     Tel2 = (game-1.)*uel/Ph[i][j][k][RHO]; // JD way...missing MP/ME?
 
      // calculate cooling rate L following Noble+
      Tel_star = Tel_target*pow(r,-1.*Tel_rslope);
      Y = Tel/Tel_star-1.;
-     // fprintf(stdout, "Tel:  %g %g %g \n", Tel, Tel_star, Y);
      // this should cool the *electrons* e.g. cooling rate set by their uel not UU
      //L = Omega*uel*pow((Y*(1.+sign(Y))),1./2.);
      //     L = Omega*uel*(Y+abs(Y));
@@ -343,8 +340,6 @@ void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
      else {
        L = 0.0;
      }
-     // fprintf(stdout, "tcool: %g \n", tcool);
-     // fprintf(stdout, "L: %g \n", L);
      // check for supercooling
      if ((uel < dt*L)) {
        fprintf(stdout, "supercooling! %g %g %g %g \n", Y, Omega, uel, L);
