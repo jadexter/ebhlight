@@ -365,7 +365,7 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   get_state(Ph, geom, &q);
   coord(i, j, k, CENT, X);
   bl_coord(X, &r, &th);
-  fprintf(stdout, "coords: %i %i %i %g %g %g %g \n",i,j,k,X[0],X[1],r,th);
+  // fprintf(stdout, "coords: %i %i %i %g %g %g %g \n",i,j,k,X[0],X[1],r,th);
 
   bsq = bsq_calc(Ph, geom);
   sigma = bsq/Ph[RHO];
