@@ -299,7 +299,7 @@ void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
      get_state(Ph[i][j][k], geom, &q);
      coord(i, j, k, CENT, X);
      bl_coord(X, &r, &th);
-     // fprintf(stdout, "coords: %i %i %i %g %g %g %g \n",i,j,k,X[0],X[1],r,th);
+     fprintf(stdout, "coords: %i %i %i %g %g %g %g \n",i,j,k,X[0],X[1],r,th);
      //approximate r
      // r = pow(ggeom[i][j][CENT].g,1./3.);
 
