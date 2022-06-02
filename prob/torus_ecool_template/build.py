@@ -63,13 +63,14 @@ bhl.config.set_cparm('X3L_RAD_BOUND', 'BC_PERIODIC')
 bhl.config.set_cparm('X3R_RAD_BOUND', 'BC_PERIODIC')
 
                            ### RUNTIME PARAMETERS ###
+# Electron-cooling function parameters
 bhl.config.set_rparm('Tel_target', 'double', default=1e+9) # Target electron temperature
 bhl.config.set_rparm('Tel_rslope', 'double', default=0.0) # Power-law index for radial temp dependence
 bhl.config.set_rparm('tcool0', 'double', default=1.0) # Only used if TCOOL is 0; fixes tcool to set value instead of 1/Omega
+bhl.config.set_rparm('tcoolOmega0', 'double', default=1.0) # Only used if TCOOL is 1; fixes tcool=1/(Omega*tcoolOmega0)
+# Standard run-time parameters
 bhl.config.set_rparm('tf', 'double', default = 20.0) # Simulation end time
 bhl.config.set_rparm('dt', 'double', default = 1.e-6)
-bhl.config.set_rparm('rin', 'double', default = 20)     # Inner edge of torus
-bhl.config.set_rparm('rmax', 'double', default = 41)    # Torus pressure maximum
 bhl.config.set_rparm('Rout', 'double', default = 1000.) # Outer extent of simulation domain
 bhl.config.set_rparm('Rout_rad', 'double', default = 40.) # only if RADIATION
 bhl.config.set_rparm('gam', 'double', default = 13./9.) # Total gas
@@ -77,6 +78,9 @@ bhl.config.set_rparm('DTd', 'double', default = 5.) # dump frequency
 bhl.config.set_rparm('DTl', 'double', default = 5.e-1) # log frequency
 bhl.config.set_rparm('DTr', 'double', default = 1000.) # restart frequency
 bhl.config.set_rparm('DNr', 'integer', default = 1000)
+# Other problem-specific parameters
+bhl.config.set_rparm('rin', 'double', default = 20)     # Inner edge of torus
+bhl.config.set_rparm('rmax', 'double', default = 41)    # Torus pressure maximum
 bhl.config.set_rparm('a', 'double', default = 0.9375) # black hole spin
 bhl.config.set_rparm('mbh', 'double', default = 1.e8) # black hole mass (in M_unit)
 bhl.config.set_rparm('M_unit', 'double', default = 8.e23) # mass unit

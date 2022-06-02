@@ -139,6 +139,7 @@ double fel0;
 
 #if COOLING
 double tcool0;
+double tcoolOmega0;
 #endif
 
 int global_start[NDIM];

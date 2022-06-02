@@ -672,6 +672,9 @@ void dump()
   #if TCOOL == 0
   WRITE_HDR(tcool0, TYPE_DBL);
   #endif
+  #if TCOOL == 1
+  WRITE_HDR(tcoolOmega0, TYPE_DBL);
+  #endif
   #endif
 
   hdf5_make_directory("geom");

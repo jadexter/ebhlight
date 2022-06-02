@@ -344,7 +344,8 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   }
   // check for supercooling
   if ((uel < dt*L)) {
-    fprintf(stdout, "supercooling! %g %g %g \n", Y, uel, L);
+    fprintf(stdout, "supercooling! Adjusting tcool to prevent. Y, uel, L: %g %g %g \n", Y, uel, L);
+    L = uel/dt - SMALL;
   }
   // AMH added output of L
   Qcool[i][j][k] = L;
@@ -368,7 +369,7 @@ double get_tcool(double r){
   // Set cooling time according to the orbital time Omega
   // JD: presumably causes problems in any non-BH problem
   double Omega=1./(pow(r,3./2.)+a);
-  tcool = 1.0/Omega;
+  tcool = 1.0/(Omega*tcoolOmega0);
   #endif
   return tcool;
 }

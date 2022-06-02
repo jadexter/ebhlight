@@ -320,6 +320,7 @@ extern double fel0;
 // cooling
 #if COOLING
 extern double tcool0;
+extern double tcoolOmega0;
 #endif
 
 // Set global variables that indicate current local metric, etc.
