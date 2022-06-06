@@ -287,6 +287,8 @@ void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
 #if COOLING
  void electron_cooling(grid_prim_type Ph, double t, double dt)
  {
+   // Testing
+   fprintf(stdout, "before loop, we have Risco=%f, iISCO=%d, jMid=%d", Risco, iISCO, jMid);
 #pragma omp parallel for collapse(3) schedule(dynamic)
    ZLOOP {
      electron_cooling_zone(i, j, k, Ph[i][j][k], dt);
@@ -312,14 +314,14 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   // Omega=1./(pow(r,3./2.)+a);
   // tcool = 1.0/Omega;
   // tcool = 0.001; // AMH: testing purposes
-  double tcool = get_tcool(r);
+  double tcool = get_tcool(i, r);
 
   uel = 1./(game-1.)*Ph[KEL]*pow(Ph[RHO],game);
   // Calculate current electron temperature...
-  // Still confused about inclusion/exclusion of MP/ME
+  // Need MP/ME because Ph[KEL] includes *total* (not electron)
+  // mass density
   thetae = MP/ME*Ph[KEL]*pow(Ph[RHO],game-1.);
   Tel = thetae*ME*CL*CL/KBOL;
-  // AMH: some more testing
   // Tel2 = (game-1.)*uel/Ph[RHO]; // JD way...missing MP/ME?
 
   // calculate cooling rate L following Noble+
@@ -358,17 +360,34 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   }
 }
 
-double get_tcool(double r){
+double get_tcool(int i, double r){
   #if TCOOL == 0
   // tcool = constant
   return tcool0;
   #endif
 
-  double tcool;
-  # if TCOOL == 1
   // Set cooling time according to the orbital time Omega
   // JD: presumably causes problems in any non-BH problem
-  double Omega=1./(pow(r,3./2.)+a);
+  # if TCOOL == 1
+  double tcool, Omega;
+  // TODO: modify Omega within the ISCO
+  // Check whether within ISCO
+  if ( r < Risco){
+    // Numerator: g^\phi\mu K_\mu. Contract manually. Need to get geometry first?
+    double numerator = ggeom[i][jMid][CENT].gcon[3][0]*Kmu[0]
+      + ggeom[i][jMid][CENT].gcon[3][1]*Kmu[1]
+      + ggeom[i][jMid][CENT].gcon[3][2]*Kmu[2]
+      + ggeom[i][jMid][CENT].gcon[3][3]*Kmu[3];
+    // Denominator: g^t\mu K_\mu
+    double denominator = ggeom[i][jMid][CENT].gcon[0][0]*Kmu[0]
+    + ggeom[i][jMid][CENT].gcon[0][1]*Kmu[1]
+    + ggeom[i][jMid][CENT].gcon[0][2]*Kmu[2]
+    + ggeom[i][jMid][CENT].gcon[0][3]*Kmu[3];
+    Omega = numerator/denominator;
+  }
+  else{
+    Omega = 1./(pow(r,3./2.)+a);
+  }
   tcool = 1.0/(Omega*tcoolOmega0);
   #endif
   return tcool;

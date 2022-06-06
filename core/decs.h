@@ -225,6 +225,9 @@ extern grid_double_type Qvisc_e, Qvisc_p, Qcoul;
 #endif // ELECTRONS
 #if COOLING
 extern grid_double_type Qcool, test_quantity, Tel_AH, Tel_JD;
+#if TCOOL == 1
+extern double Kmu[4];
+#endif
 #endif // COOLING
 
 /*******************************************************************************
@@ -245,6 +248,9 @@ extern double Risco;
 #if COOLING
 extern double Tel_target;
 extern double Tel_rslope;
+#if TCOOL == 1
+extern int jMid, iISCO;
+#endif
 #endif
 #if RADIATION || COOLING
 extern double mbh, Mbh, L_unit, T_unit, M_unit, RHO_unit, U_unit, B_unit;
@@ -499,7 +505,7 @@ void apply_rad_force_e(grid_prim_type Prh, grid_prim_type Pr,
 #if COOLING
 void electron_cooling(grid_prim_type Ph, double t, double dt);
 void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt);
-double get_tcool(double r);
+double get_tcool(int i, double r);
 #endif
 void fixup_electrons(grid_prim_type p);
 #endif

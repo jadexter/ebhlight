@@ -43,6 +43,9 @@ grid_double_type Qvisc_e, Qvisc_p, Qcoul;
 #endif // ELECTRONS
 #if COOLING
 grid_double_type Qcool, test_quantity, Tel_AH, Tel_JD;
+#if TCOOL == 1
+double Kmu[4];
+#endif
 #endif //COOLING
 
 double conn[N1 + 2*NG][N2 + 2*NG][NDIM][NDIM][NDIM];
@@ -67,6 +70,9 @@ double Risco;
 #if COOLING
 double Tel_target;
 double Tel_rslope;
+#if TCOOL == 1
+int jMid, iISCO;
+#endif
 #endif
 #if RADIATION || COOLING
 double mbh, Mbh, L_unit, T_unit, M_unit, RHO_unit, U_unit, B_unit;
