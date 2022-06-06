@@ -288,7 +288,6 @@ void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
  void electron_cooling(grid_prim_type Ph, double t, double dt)
  {
    // Testing
-   fprintf(stdout, "before loop, we have Risco=%f, iISCO=%d, jMid=%d", Risco, iISCO, jMid);
 #pragma omp parallel for collapse(3) schedule(dynamic)
    ZLOOP {
      electron_cooling_zone(i, j, k, Ph[i][j][k], dt);
@@ -384,6 +383,9 @@ double get_tcool(int i, double r){
     + ggeom[i][jMid][CENT].gcon[0][2]*Kmu[2]
     + ggeom[i][jMid][CENT].gcon[0][3]*Kmu[3];
     Omega = numerator/denominator;
+    double OmegaTest = 1./(pow(r,3./2.)+a);
+    fprintf(stdout, "Num=%f, denom=%f\n", numerator, denominator);
+    fprintf(stdout, "r < Risco, index %i. Omega would have been %f, instead is %f\n", i, OmegaTest, Omega);
   }
   else{
     Omega = 1./(pow(r,3./2.)+a);

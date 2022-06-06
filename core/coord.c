@@ -497,7 +497,7 @@ void set_grid()
   // AMH calculate relevant ISCO properties here
   #if COOLING
   #if TCOOL == 1
-  jMid = (N2 + 2*NG)/2; // index location of midplane
+  jMid = (N2 + 2*NG)/2; // index location of midplane (straddles with jMid-1)
   double Xtest[NDIM], rt, tht;
   // Find iISCO, the index location of ISCO
   iISCO = 0;
@@ -518,8 +518,11 @@ void set_grid()
     + 2.0*ggeom[iISCO][jMid][CENT].gcov[0][3]*Omega0
     + ggeom[iISCO][jMid][CENT].gcov[3][3]*Omega0*Omega0;
   double gamma = pow(-1./gamma_denom, 1./2.); // Lorentz factor at ISCO
-  Kmu[0] = gamma; Kmu[3] = gamma*Omega0;
-  Kmu[1] = 0.; Kmu[2] = 0.;
+  fprintf(stdout, "ISCO orbital values: gamma=%f, Omega0=%f\n", gamma, Omega0);
+  double KMu[4]; // K^\mu (contravariant)
+  KMu[0] = gamma; KMu[3] = gamma*Omega0;
+  KMu[1] = 0.; KMu[2] = 0.;
+  lower(KMu, ggeom[iISCO][jMid][CENT].gcov, Kmu);
   #endif // TCOOL == 1
   #endif // COOLING
 }
