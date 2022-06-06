@@ -369,8 +369,7 @@ double get_tcool(int i, double r){
   // JD: presumably causes problems in any non-BH problem
   # if TCOOL == 1
   double tcool, Omega;
-  // TODO: modify Omega within the ISCO
-  // Check whether within ISCO
+  // If in ISCO, use Noble+ Eq. 16
   if ( r < Risco){
     // Numerator: g^\phi\mu K_\mu. Contract manually. Need to get geometry first?
     double numerator = ggeom[i][jMid][CENT].gcon[3][0]*Kmu[0]
@@ -383,11 +382,9 @@ double get_tcool(int i, double r){
     + ggeom[i][jMid][CENT].gcon[0][2]*Kmu[2]
     + ggeom[i][jMid][CENT].gcon[0][3]*Kmu[3];
     Omega = numerator/denominator;
-    double OmegaTest = 1./(pow(r,3./2.)+a);
-    fprintf(stdout, "Num=%f, denom=%f\n", numerator, denominator);
-    fprintf(stdout, "r < Risco, index %i. Omega would have been %f, instead is %f\n", i, OmegaTest, Omega);
   }
   else{
+    // TODO: relativistic correction?
     Omega = 1./(pow(r,3./2.)+a);
   }
   tcool = 1.0/(Omega*tcoolOmega0);
