@@ -117,6 +117,7 @@ void set_core_params()
   set_param("Tel_rslope", &Tel_rslope);
   set_param("tcool0", &tcool0);
   set_param("tcoolOmega0", &tcoolOmega0);
+  set_param("q_constant", &q_constant);
   #endif
 
   #if ELECTRONS

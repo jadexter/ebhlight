@@ -42,7 +42,7 @@ grid_prim_type psupersave;
 grid_double_type Qvisc_e, Qvisc_p, Qcoul;
 #endif // ELECTRONS
 #if COOLING
-grid_double_type Qcool, test_quantity, Tel_AH, Tel_JD;
+grid_double_type Qcool;
 #if TCOOL == 1
 double Kmu[4];
 #endif
@@ -146,6 +146,7 @@ double fel0;
 #if COOLING
 double tcool0;
 double tcoolOmega0;
+double q_constant;
 #endif
 
 int global_start[NDIM];

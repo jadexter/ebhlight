@@ -309,10 +309,6 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   bsq = bsq_calc(Ph, geom);
   sigma = bsq/Ph[RHO];
 
-  // JD: presumably causes problems in any non-BH problem
-  // Omega=1./(pow(r,3./2.)+a);
-  // tcool = 1.0/Omega;
-  // tcool = 0.001; // AMH: testing purposes
   double tcool = get_tcool(i, r);
 
   uel = 1./(game-1.)*Ph[KEL]*pow(Ph[RHO],game);
@@ -321,12 +317,11 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   // mass density
   thetae = MP/ME*Ph[KEL]*pow(Ph[RHO],game-1.);
   Tel = thetae*ME*CL*CL/KBOL;
-  // Tel2 = (game-1.)*uel/Ph[RHO]; // JD way...missing MP/ME?
+  // Tel = (game-1.)*uel/Ph[RHO]; // JD way...missing MP/ME?
 
   // calculate cooling rate L following Noble+
   Tel_star = Tel_target*pow(r,-1.*Tel_rslope);
   Y = Tel/Tel_star-1.;
-  // this should cool the *electrons* e.g. cooling rate set by their uel not UU
   //L = Omega*uel*pow((Y*(1.+sign(Y))),1./2.);
   //     L = Omega*uel*(Y+abs(Y));
   //     L = Omega*uel*log(1.+(Y+abs(Y)));
@@ -334,11 +329,9 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   L = 0.;
   //limit Y for now and don't cool sigma > 1
   Y = MY_MIN(Y, 1000.);
-  // AMH for testing
-  test_quantity[i][j][k] = uel;
   if ((!isnan(Tel)) && (Y > 0.) && (uel > 0.) && (Tel > 0.) && (sigma < 1.)) {
-    L = 2.*uel*sqrt(Y)/tcool;
-    // L = 0.001; // AMH: testing purposes
+    // this should cool the *electrons* e.g. cooling rate set by their uel not UU
+    L = 2.*uel*pow(Y, q_constant)/tcool;
   }
   else {
     L = 0.0;
@@ -371,7 +364,7 @@ double get_tcool(int i, double r){
   double tcool, Omega;
   // If in ISCO, use Noble+ Eq. 16
   if ( r < Risco){
-    // Numerator: g^\phi\mu K_\mu. Contract manually. Need to get geometry first?
+    // Numerator: g^\phi\mu K_\mu. Contract manually.
     double numerator = ggeom[i][jMid][CENT].gcon[3][0]*Kmu[0]
       + ggeom[i][jMid][CENT].gcon[3][1]*Kmu[1]
       + ggeom[i][jMid][CENT].gcon[3][2]*Kmu[2]

@@ -674,6 +674,7 @@ void dump()
   #endif
   #if TCOOL == 1
   WRITE_HDR(tcoolOmega0, TYPE_DBL);
+  WRITE_HDR(q_constant, TYPE_DBL);
   #endif
   #endif
 
@@ -773,12 +774,6 @@ void dump()
       #if ELECTRONS
       WRITE_GRID(Qcool, "Qcool", TYPE_FLOAT);
       hdf5_add_units("Qcool", "code", file_id);
-      WRITE_GRID(test_quantity, "test_quantity", TYPE_FLOAT);
-      hdf5_add_units("test_quantity", "code", file_id);
-      WRITE_GRID(Tel_AH, "Tel_AH", TYPE_FLOAT);
-      hdf5_add_units("Tel_AH", "code", file_id);
-      WRITE_GRID(Tel_JD, "Tel_JD", TYPE_FLOAT);
-      hdf5_add_units("Tel_JD", "code", file_id);
       #endif
     #endif
     #if RADIATION || COOLING

@@ -68,6 +68,7 @@ bhl.config.set_rparm('Tel_target', 'double', default=1e+9) # Target electron tem
 bhl.config.set_rparm('Tel_rslope', 'double', default=0.0) # Power-law index for radial temp dependence
 bhl.config.set_rparm('tcool0', 'double', default=1.0) # Only used if TCOOL is 0; fixes tcool to set value instead of 1/Omega
 bhl.config.set_rparm('tcoolOmega0', 'double', default=1.0) # Only used if TCOOL is 1; fixes tcool=1/(Omega*tcoolOmega0)
+bhl.config.set_rparm('q_constant', 'double', default=0.5) # Only used if TCOOL is 1; Noble+ uses 0.5, Nico uses 1.
 # Standard run-time parameters
 bhl.config.set_rparm('tf', 'double', default = 30001.0) # Simulation end time
 bhl.config.set_rparm('dt', 'double', default = 1.e-6)

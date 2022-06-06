@@ -224,7 +224,7 @@ extern grid_int_type Nem, Nabs, Nsc;
 extern grid_double_type Qvisc_e, Qvisc_p, Qcoul;
 #endif // ELECTRONS
 #if COOLING
-extern grid_double_type Qcool, test_quantity, Tel_AH, Tel_JD;
+extern grid_double_type Qcool;
 #if TCOOL == 1
 extern double Kmu[4];
 #endif
@@ -327,6 +327,7 @@ extern double fel0;
 #if COOLING
 extern double tcool0;
 extern double tcoolOmega0;
+extern double q_constant;
 #endif
 
 // Set global variables that indicate current local metric, etc.
