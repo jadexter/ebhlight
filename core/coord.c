@@ -493,39 +493,6 @@ void set_grid()
   #if RADIATION
   dt_light_min = mpi_min(dt_light_min);
   #endif
-
-  // AMH calculate relevant ISCO properties here, outside of parallel loops
-  #if COOLING
-  #if TCOOL == 1
-  jMid = (N2 + 2*NG)/2; // index location of midplane (straddles with jMid-1)
-  double Xtest[NDIM], rt, tht;
-  // Find iISCO, the index location of ISCO
-  iISCO = 0;
-  for (int ij = 0; ij < N1; ij++){
-    coord(ij, jMid, 0, CENT, Xtest);
-    bl_coord(Xtest, &rt, &tht);
-    if (rt > Risco){
-      iISCO = ij - 1;
-      break;
-      fprintf(stdout, "Found ISCO at %f, true value %f\n", rt, Risco);
-    }
-  }
-  fprintf(stdout, "Found index for rISCO: %d out of %d \n", iISCO, N1);
-  // The four-velocity at the ISCO is purely circular, so
-  // u^\mu = K^\mu = (u^t, 0, 0, u^\phi). u^t = gamma
-  // u^\phi = gamma*Omega0
-  double Omega0 = 1.0/(pow(Risco, 3./2.) + a); // Omega at the ISCO
-  double gamma_denom = ggeom[iISCO][jMid][CENT].gcov[0][0]
-    + 2.0*ggeom[iISCO][jMid][CENT].gcov[0][3]*Omega0
-    + ggeom[iISCO][jMid][CENT].gcov[3][3]*Omega0*Omega0;
-  double gamma = pow(-1./gamma_denom, 1./2.); // Lorentz factor at ISCO
-  fprintf(stdout, "ISCO orbital values: gamma=%f, Omega0=%f\n", gamma, Omega0);
-  double KMu[4]; // K^\mu (contravariant)
-  KMu[0] = gamma; KMu[3] = gamma*Omega0;
-  KMu[1] = 0.; KMu[2] = 0.;
-  lower(KMu, ggeom[iISCO][jMid][CENT].gcov, Kmu);
-  #endif // TCOOL == 1
-  #endif // COOLING
 }
 
 void zero_arrays()

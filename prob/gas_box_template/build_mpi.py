@@ -29,6 +29,8 @@ bhl.config.set_cparm('ELECTRONS', True)
 bhl.config.set_cparm('SUPPRESS_HIGHB_HEAT', False)
 bhl.config.set_cparm('BETA_HEAT', 3)
 bhl.config.set_cparm('COULOMB', True)
+bhl.config.set_cparm('TCOOL', 0)
+bhl.config.set_cparm('INITELECTRONS', False)
 
 # FLUID
 bhl.config.set_cparm('RECONSTRUCTION', 'LINEAR')
@@ -61,6 +63,9 @@ bhl.config.set_cparm('X3R_RAD_BOUND', 'BC_PERIODIC')
 
 bhl.config.set_rparm('tf', 'double', default = 5120.e-6)
 bhl.config.set_rparm('dt', 'double', default = 5120.e-6)
+bhl.config.set_rparm('tcool0', 'double', default=1.0)
+bhl.config.set_rparm('tcoolOmega0', 'double', default=1.0)
+bhl.config.set_rparm('q_constant', 'double', default=0.5)
 bhl.config.set_rparm('L_unit', 'double', default = 5.85532e7)
 bhl.config.set_rparm('M_unit', 'double', default = 2.01466e15)
 bhl.config.set_rparm('tune_emiss', 'double', default = 1.e-5)
