@@ -640,6 +640,11 @@ void push_superphotons(double dt);
 #if RADIATION || COOLING
 void set_units();
 #endif
+#if COOLING
+#if TCOOL == 1
+void set_ISCOquantities();
+#endif
+#endif
 #if RADIATION
 void init_rad(grid_prim_type Prad);
 void init_superphoton_resolution();

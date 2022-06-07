@@ -600,6 +600,7 @@ void dump()
   #if COOLING
   int has_cooling = COOLING; WRITE_HDR(has_cooling, TYPE_INT);
   int has_tcool = TCOOL; WRITE_HDR(has_tcool, TYPE_INT);
+  int init_electrons = INITELECTRONS; WRITE_HDR(init_electrons, TYPE_INT);
   #endif
 
   WRITE_HDR(metric, TYPE_STR);

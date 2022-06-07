@@ -42,6 +42,7 @@ bhl.config.set_cparm('X3R_INFLOW', False)
 # COOLING
 bhl.config.set_cparm('COOLING', True) # electron-only cooling function
 bhl.config.set_cparm('TCOOL', 1) # Sets electron cooling time. Only relevant if COOLING. Option 1 sets tcool = 1/Omega. TCOOL 0 sets tcool to a constant (see tcool0 below)
+bhl.config.set_cparm('INITELECTRONS', True)
 
 # RADIATION
 bhl.config.set_cparm('RADIATION', False)

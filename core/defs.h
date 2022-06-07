@@ -71,7 +71,8 @@ double Risco;
 double Tel_target;
 double Tel_rslope;
 #if TCOOL == 1
-int jMid, iISCO;
+int jMid = (N2 + 2*NG)/2; // index location of midplane (straddles with jMid-1)
+int iISCO;
 #endif
 #endif
 #if RADIATION || COOLING

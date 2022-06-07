@@ -17,6 +17,7 @@ void fixup_electrons_1zone(double P[NVAR]);
 
 void init_electrons()
 {
+  #if INITELECTRONS
   double uel;
 
   ZSLOOP(-NG, N1 + NG - 1, -NG, NG + N2 - 1, -NG, NG + N3 - 1) {
@@ -27,6 +28,7 @@ void init_electrons()
     P[i][j][k][KTOT] = (gam-1.)*P[i][j][k][UU]*pow(P[i][j][k][RHO],-gam);
     P[i][j][k][KEL] = (game-1.)*uel*pow(P[i][j][k][RHO],-game);
   }
+  #endif
 
   bound_prim(P);
 }
@@ -360,7 +362,7 @@ double get_tcool(int i, double r){
 
   // Set cooling time according to the orbital time Omega
   // JD: presumably causes problems in any non-BH problem
-  # if TCOOL == 1
+  #if TCOOL == 1
   double tcool, Omega;
   // If in ISCO, use Noble+ Eq. 16
   if ( r < Risco){
@@ -381,8 +383,8 @@ double get_tcool(int i, double r){
     Omega = 1./(pow(r,3./2.)+a);
   }
   tcool = 1.0/(Omega*tcoolOmega0);
-  #endif
   return tcool;
+  #endif
 }
 #endif // COOLING
 

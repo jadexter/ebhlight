@@ -31,6 +31,29 @@ void set_units()
 }
 #endif
 
+#if COOLING
+#if TCOOL == 1
+void set_ISCOquantities()
+{
+  iISCO = floor((log(Risco/Rin)*2./dx[1] - 1)/2);
+  fprintf(stdout, "iISCO: %d", iISCO);
+  // The four-velocity at the ISCO is purely circular, so
+  // u^\mu = K^\mu = (u^t, 0, 0, u^\phi). u^t = gamma
+  // u^\phi = gamma*Omega0
+  double Omega0 = 1.0/(pow(Risco, 3./2.) + a); // Omega at the ISCO
+  double gamma_denom = ggeom[iISCO][jMid][CENT].gcov[0][0]
+  + 2.0*ggeom[iISCO][jMid][CENT].gcov[0][3]*Omega0
+  + ggeom[iISCO][jMid][CENT].gcov[3][3]*Omega0*Omega0;
+  double gamma = pow(-1./gamma_denom, 1./2.); // Lorentz factor at ISCO
+  fprintf(stdout, "ISCO orbital values: gamma=%f, Omega0=%f\n", gamma, Omega0);
+  double KMu[4]; // K^\mu (contravariant)
+  KMu[0] = gamma; KMu[3] = gamma*Omega0;
+  KMu[1] = 0.; KMu[2] = 0.;
+  lower(KMu, ggeom[iISCO][jMid][CENT].gcov, Kmu);
+}
+#endif
+#endif
+
 #if RADIATION
 void init_rad(grid_prim_type Prad)
 {

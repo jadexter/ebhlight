@@ -34,20 +34,24 @@ void init_prob()
   double ue0 = Pe0/(game-1.);
   // double ue0 = ne*KBOL*Te0/(game-1.);
   double ug0 = up0 + ue0;
+  double Pg0 = (gam - 1.)*ug0;
   // Kappa is defined as Pressure/(mass density)^gamma, where
   // mass density is always the total mass density but the pressure
   // is the species' pressure.
   double kappae0 = Pe0/pow(rho0, game)/CL/CL;
+  double kappag0 = Pg0/pow(rho0, gam)/CL/CL;
 
   // Alternate definitions.
   // Inspired by void coulomb's definitions.
   // double thetae = KBOL*thetae/(ME*CL*CL);
   // double kappe0 = ME/MP*thetae/pow(rho0, game - 1.0);
 
-  ZLOOP {
+  ZSLOOP(-NG, N1 + NG - 1, -NG, NG + N2 - 1, -NG, NG + N3 - 1) {
+    // ZLOOP {
     P[i][j][k][RHO] = rho0; // TOTAL mass density (electron + proton)
     P[i][j][j][UU] = ug0; // TOTAL energy density (electron + proton)
     P[i][j][k][KEL] = kappae0;
+    P[i][j][k][KTOT] = kappag0;
     P[i][j][k][U1]  = 0.;
     P[i][j][k][U2]  = 0.;
     P[i][j][k][U3]  = 0.;

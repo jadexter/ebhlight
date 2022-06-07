@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
   #if !OPENMP
   omp_set_num_threads(1);
   #endif
-  
+
   // Check for minimal required MPI thread support
   int threadSafety;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &threadSafety);
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
   }
 
   init_mpi();
-  
+
   if (mpi_myrank() == 0) {
     fprintf(stdout, "\n          ************************************************************\n");
     fprintf(stdout, "          *                                                          *\n");
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
         n < argc-1) {
       if (*(argv[n]+1) == 'p') { // Set parameter file path
         strcpy(pfname, argv[++n]);
-      } 
+      }
     }
   }
 
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
   time_init();
   if (!is_restart) {
     init_core();
-   
+
     // Set primitive variables
     if (mpi_io_proc()) {
       fprintf(stderr, "Init from GRMHD? %i\n\n", strcmp(init_from_grmhd, "No") != 0);
@@ -119,9 +119,9 @@ int main(int argc, char *argv[])
     } else { // Initialize fluid from GRMHD restart file
       init_fluid_restart();
     }
-    
+
     init_final();
-    if (mpi_myrank() == 0) 
+    if (mpi_myrank() == 0)
       fprintf(stdout, "Initial conditions generated\n\n");
   }
 
@@ -136,12 +136,12 @@ int main(int argc, char *argv[])
   if (mpi_io_proc())
     fprintf(stdout, "\nEntering main loop\n");
   int dumpThisStep = 0;
-  
+
   // Loop over time
   while (t < tf) {
     dumpThisStep = 0;
     timer_start(TIMER_ALL);
-    
+
     // Step variables forward in time
     step();
     nstep++;
@@ -169,12 +169,12 @@ int main(int argc, char *argv[])
       fprintf(stdout, "t = %10.5g dt = %10.5g n = %8d\n", t, dt, nstep);
       #if RADIATION
       fprintf(stdout, "[%i] made = %d abs = %d scatt = %d lost = %d rec = %d sent = %d rcvd = %d fail = %d tot = %d\n",
-        mpi_myrank(), step_made, step_abs, step_scatt, step_lost, step_rec, 
+        mpi_myrank(), step_made, step_abs, step_scatt, step_lost, step_rec,
         step_sent, step_rcvd, step_fail, step_tot);
-      fprintf(stdout, "ALL made = %d abs = %d scatt = %d lost = %d rec = %d sent = %d rcvd = %d fail = %d tot = %d\n", 
+      fprintf(stdout, "ALL made = %d abs = %d scatt = %d lost = %d rec = %d sent = %d rcvd = %d fail = %d tot = %d\n",
         step_made_all, step_abs_all, step_scatt_all, step_lost_all, step_rec_all,
         step_sent_all, step_rcvd_all, step_fail_all, step_tot_all);
-      
+
       if (step_sent_all != step_rcvd_all) {
         printf("PHOTON MPI ANOMALY!\n");
         printf("sent = %i rcvd = %i\n", step_sent_all, step_rcvd_all);
@@ -209,7 +209,7 @@ int main(int argc, char *argv[])
         trestart += DTr;
       }
     }
-  
+
     reset_log_variables();
 
     timer_stop(TIMER_ALL);
@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
       report_performance();
     }
   }
-  
+
   if (dumpThisStep == 0) diag(DIAG_FINAL);
 
   MPI_Finalize();
@@ -238,7 +238,7 @@ void init_core()
   zero_arrays();
   reset_dump_variables();
   set_grid();
-    
+
   failed = 0;
   t = 0.;
   dump_cnt = 0;
@@ -246,6 +246,11 @@ void init_core()
 
   #if RADIATION || COOLING
   set_units();
+  #endif
+  #if COOLING
+  #if TCOOL == 1
+  set_ISCOquantities();
+  #endif
   #endif
   #if RADIATION
   dt = cour*dt_light_min;
@@ -271,7 +276,7 @@ void init_final()
 
   #if RADIATION
   init_rad(P);
-  set_weight(P); 
+  set_weight(P);
   init_superphoton_resolution();
   #endif
 
@@ -285,4 +290,3 @@ void init_final()
 
   dump_grid();
 }
-
