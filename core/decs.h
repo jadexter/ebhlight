@@ -248,9 +248,6 @@ extern double Risco;
 #if COOLING
 extern double Tel_target;
 extern double Tel_rslope;
-#if TCOOL == 1
-extern int jMid, iISCO;
-#endif
 #endif
 #if RADIATION || COOLING
 extern double mbh, Mbh, L_unit, T_unit, M_unit, RHO_unit, U_unit, B_unit;

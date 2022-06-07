@@ -366,16 +366,20 @@ double get_tcool(int i, double r){
   double tcool, Omega;
   // If in ISCO, use Noble+ Eq. 16
   if ( r < Risco){
+    // Get gcon
+    double thetaMidplane = M_PI/2.0;
+    double gcon[NDIM][NDIM];
+    bl_gcon_func(r, thetaMidplane, gcon);
     // Numerator: g^\phi\mu K_\mu. Contract manually.
-    double numerator = ggeom[i][jMid][CENT].gcon[3][0]*Kmu[0]
-      + ggeom[i][jMid][CENT].gcon[3][1]*Kmu[1]
-      + ggeom[i][jMid][CENT].gcon[3][2]*Kmu[2]
-      + ggeom[i][jMid][CENT].gcon[3][3]*Kmu[3];
+    double numerator = gcon[3][0]*Kmu[0]
+      + gcon[3][1]*Kmu[1]
+      + gcon[3][2]*Kmu[2]
+      + gcon[3][3]*Kmu[3];
     // Denominator: g^t\mu K_\mu
-    double denominator = ggeom[i][jMid][CENT].gcon[0][0]*Kmu[0]
-    + ggeom[i][jMid][CENT].gcon[0][1]*Kmu[1]
-    + ggeom[i][jMid][CENT].gcon[0][2]*Kmu[2]
-    + ggeom[i][jMid][CENT].gcon[0][3]*Kmu[3];
+    double denominator = gcon[0][0]*Kmu[0]
+    + gcon[0][1]*Kmu[1]
+    + gcon[0][2]*Kmu[2]
+    + gcon[0][3]*Kmu[3];
     Omega = numerator/denominator;
   }
   else{

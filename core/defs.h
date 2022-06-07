@@ -70,10 +70,6 @@ double Risco;
 #if COOLING
 double Tel_target;
 double Tel_rslope;
-#if TCOOL == 1
-int jMid = (N2 + 2*NG)/2; // index location of midplane (straddles with jMid-1)
-int iISCO;
-#endif
 #endif
 #if RADIATION || COOLING
 double mbh, Mbh, L_unit, T_unit, M_unit, RHO_unit, U_unit, B_unit;

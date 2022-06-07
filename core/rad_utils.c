@@ -38,8 +38,6 @@ void set_ISCOquantities()
   double thetaMidplane = M_PI/2.0;
   double gcov[NDIM][NDIM];
   bl_gcov_func(Risco, thetaMidplane, gcov);
-  // iISCO = floor((log(Risco/Rin)*2./dx[1] - 1)/2);
-  // fprintf(stdout, "iISCO: %d", iISCO);
   // The four-velocity at the ISCO is purely circular, so
   // u^\mu = K^\mu = (u^t, 0, 0, u^\phi). u^t = gamma
   // u^\phi = gamma*Omega0
