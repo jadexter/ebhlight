@@ -494,7 +494,7 @@ void set_grid()
   dt_light_min = mpi_min(dt_light_min);
   #endif
 
-  // AMH calculate relevant ISCO properties here
+  // AMH calculate relevant ISCO properties here, outside of parallel loops
   #if COOLING
   #if TCOOL == 1
   jMid = (N2 + 2*NG)/2; // index location of midplane (straddles with jMid-1)
@@ -507,6 +507,7 @@ void set_grid()
     if (rt > Risco){
       iISCO = ij - 1;
       break;
+      fprintf(stdout, "Found ISCO at %f, true value %f\n", rt, Risco);
     }
   }
   fprintf(stdout, "Found index for rISCO: %d out of %d \n", iISCO, N1);
