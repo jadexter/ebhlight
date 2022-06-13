@@ -4,7 +4,8 @@
 #                                                                              #
 ################################################################################
 
-import sys; sys.path.append('../../script/'); 
+import sys; 
+sys.path.append('../../script/')
 sys.dont_write_bytecode = True; import bhlight as bhl; del sys
 PROB = 'sod'
 

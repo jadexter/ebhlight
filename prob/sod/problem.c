@@ -33,17 +33,16 @@ void init_prob()
   ZLOOP {
     coord(i, j, k, CENT, X);
 
+    PLOOP P[i][j][k][ip] = 0.;
+
     P[i][j][k][RHO] = (X[1] < 0.5 || X[1] > 1.5) ? 1.0 : 0.125;
 
     double pgas = (X[1] < 0.5 || X[1] > 1.5) ? 1.0 : 0.1;
     P[i][j][k][UU] = pgas/(gam - 1.);
 
-    P[i][j][k][U1] = 0.;
-    P[i][j][k][U2] = 0.;
-    P[i][j][k][U3] = 0.;
-    P[i][j][k][B1] = 0.;
-    P[i][j][k][B2] = 0.;
-    P[i][j][k][B3] = 0.;
+    #if NONTHERMAL
+    NTELOOP P[i][j][k][ip] = 0;
+    #endif
   } // ZLOOP
 
   // Rescale to make problem nonrelativistic
