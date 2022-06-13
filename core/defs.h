@@ -45,6 +45,11 @@ struct of_geom ggeom[N1+2*NG][N2+2*NG][NPG] ;
 double dt_light[N1+2*NG][N2+2*NG], dt_light_min;
 #endif
 
+#if NONTHERMAL
+double nteGammas[NTEBINS];
+double log10nteGammas[NTEBINS];
+#endif
+
 /*******************************************************************************
     GLOBAL VARIABLES
 *******************************************************************************/
@@ -58,9 +63,11 @@ double gam;
 double M_unit;
 double Reh;
 double Risco;
-#if RADIATION
+#if RADIATION || NONTHERMAL
 double mbh, Mbh, L_unit, T_unit, M_unit, RHO_unit, U_unit, B_unit;
 double Ne_unit, Thetae_unit, kphys_to_num;
+#endif
+#if RADIATION
 double tp_over_te, thetae_max, sigma_max, kdotk_tol;
 #endif
 
@@ -97,6 +104,7 @@ int istart, istop, jstart, jstop;
 int nstep;
 int is_restart;
 
+// Output parameters
 double DTd;
 double DTl;
 double DTr;
@@ -108,22 +116,28 @@ int dump_cnt;
 int rdump_cnt;
 double tdump, trestart, tlog;
 int root_fcount[FCOUNT_NBINS];
+char vnams[NVAR][STRLEN];
 
+// Global flags
 int failed;
 int lim;
 
+// Diagnostics
 double mdot = 0., mdot_eh = 0.;
 double edot = 0., edot_eh = 0.;
 double ldot = 0., ldot_eh = 0.;
 int icurr, jcurr, kcurr;
 
+// Parallelism
 int nthreads;
 
+// Electrons
 #if ELECTRONS
 double game, gamp;
 double fel0;
 #endif
 
+// MPI-specific stuff
 int global_start[NDIM];
 int global_stop[NDIM];
 

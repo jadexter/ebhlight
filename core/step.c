@@ -86,6 +86,10 @@ void step()
     (N1+2*NG)*(N2+2*NG)*(N3+2*NG)*NDIM*sizeof(double));
   #endif // RADIATION
 
+  #if NONTHERMAL
+  step_nonthermal(P);
+  #endif
+
   // Increment time
   t += dt;
   

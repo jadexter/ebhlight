@@ -96,6 +96,9 @@ int main(int argc, char *argv[])
   // Perform initializations, either directly, via checkpoint, or initialize
   // with GRMHD data
   init_params(pfname);
+  #if NONTHERMAL
+  set_nonthermal_gammas();
+  #endif
   init_io();
   //init_random(300*mpi_myrank());
   init_random(1 + omp_get_wtime() + 300.*mpi_myrank());
@@ -265,6 +268,7 @@ void init_core()
  */
 void init_final()
 {
+  set_units();
   #if RADIATION
   init_rad(P);
   set_weight(P); 
@@ -281,4 +285,3 @@ void init_final()
 
   dump_grid();
 }
-

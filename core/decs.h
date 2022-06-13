@@ -65,6 +65,16 @@
 // Maximum value of gamma, the Lorentz factor
 #define GAMMAMAX (50.)
 
+// Default values for the max and min gamma in the nonthermal electron distribution
+#if NONTHERMAL
+#ifndef NTGAMMAMIN
+#define NTGAMMAMIN (50.)
+#endif
+#ifndef NTGAMMAMAX
+#define NTGAMMAMAX (500000.)
+#endif
+#endif
+
 // Maximum fractional increase in timestep per timestep
 #define SAFE  (1.3)
 
@@ -97,6 +107,7 @@
 #define B2  (6)
 #define B3  (7)
 #define NVAR_BASE (B3 + 1)
+
 #if ELECTRONS
 #define KEL  (NVAR_BASE - 1 + 1)
 #define KTOT (NVAR_BASE - 1 + 2)
@@ -104,13 +115,17 @@
 #else
 #define NVAR_EL (0)
 #endif
+
 #if NONTHERMAL
-#define TEST1 (NVAR_BASE + NVAR_EL - 1 + 1)
-#define TEST2 (NVAR_BASE + NVAR_EL - 1 + 2)
-#define NVAR_NT (2)
+#ifndef NTEBINS
+#define NTEBINS (64) // Default bin number
+#endif
+#define NTESTART (NVAR_BASE + NVAR_EL)
+#define NVAR_NT (NTEBINS)
 #else
 #define NVAR_NT (0)
 #endif
+
 #define NVAR (NVAR_BASE + NVAR_EL + NVAR_NT)
 
 // Centering of grid functions
@@ -228,6 +243,10 @@ extern grid_prim_type psupersave;
 #if ELECTRONS
 extern grid_double_type Qvisc_e, Qvisc_p, Qcoul;
 #endif // ELECTRONS
+#if NONTHERMAL
+extern double nteGammas[NTEBINS];
+extern double log10nteGammas[NTEBINS];
+#endif
 
 /*******************************************************************************
     GLOBAL VARIABLES SECTION
@@ -244,9 +263,11 @@ extern double gam;
 extern double M_unit;
 extern double Reh;
 extern double Risco;
-#if RADIATION
+#if RADIATION || NONTHERMAL
 extern double mbh, Mbh, L_unit, T_unit, M_unit, RHO_unit, U_unit, B_unit;
 extern double Ne_unit, Thetae_unit, kphys_to_num;
+#endif
+#if RADIATION 
 extern double tp_over_te, thetae_max, sigma_max, kdotk_tol;
 #endif
 
@@ -296,6 +317,7 @@ extern int dump_cnt;
 extern int rdump_cnt;
 extern double tdump, trestart, tlog;
 extern int root_fcount[FCOUNT_NBINS];
+extern char vnams[NVAR][STRLEN];
 
 // Global flags
 extern int failed;
@@ -414,6 +436,10 @@ extern int global_stop[NDIM];
 // Loop over primitive variables
 #define PLOOP for(int ip = 0; ip < NVAR; ip++)
 #define BASELOOP for (int ip = 0; ip < NVAR_BASE; ip++)
+#if NONTHERMAL
+#define NTELOOP for (int ip = NTESTART; ip < NVAR; ip++)
+#define NTEGAMMALOOP for (int ig = 0; ig<NTEBINS; ig++)
+#endif
 
 // Loop over spacetime indices
 #define DLOOP1 for (int mu = 0; mu < NDIM; mu++)
@@ -520,6 +546,7 @@ void set_param_optional(char *key, void *data);
 //void set_param(char *key, void *data);
 //void read_params(char *pfname);
 void init_io();
+void set_vnams();
 void init_fluid_restart();
 #if RADIATION
 void track_ph();
@@ -584,6 +611,20 @@ void mpi_sync_output();
 void mpi_barrier();
 int mpi_is_periodic(int dir);
 
+// nonthermal.c
+#if NONTHERMAL
+void step_nonthermal(grid_prim_type Pr);
+void nonthermal_adiab(int i, int j, int k, grid_prim_type Pr);
+void nonthermal_adiab_upwind(double adiab, double *ngamma, double *nprime);
+double gamma_integral(double *ureal);
+double calc_expansion(int i, int j, int k, grid_prim_type Pr);
+void set_nonthermal_gammas();
+void cool_nonthermal(double *Pr, struct of_geom *geom);
+void inject_nonthermal(double *Pr);
+void calc_gdot_rad(double *Pr, struct of_geom *geom, double *gdot);
+double calc_bsq_cgs(double *Pr, struct of_geom *geom);
+#endif
+
 // phys.c
 void primtoflux(double *pr, struct of_state *q, int dir, struct of_geom *geom,
   double *flux);
@@ -618,12 +659,14 @@ void push_superphotons(double dt);
 #endif
 
 // rad_utils.c
+#if RADIATION || NONTHERMAL
+void set_units();
+#endif
 #if RADIATION
 void init_rad(grid_prim_type Prad);
 void init_superphoton_resolution();
 void update_superphoton_resolution(grid_prim_type Prad);
 double linear_interp_log(double x, double *table, double lmin, double dl);
-void set_units();
 void list_remove(struct of_photon **ph, struct of_photon **ph_head,
   struct of_photon **ph_prev);
 double get_Thetae(double P[NVAR]);

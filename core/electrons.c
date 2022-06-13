@@ -72,6 +72,15 @@ void heat_electrons_zone(int i, int j, int k, double Pi[NVAR], double Ps[NVAR],
   Pf[KTOT] = ktotharm;
 }
 
+/**
+ * @brief Calculates the electron heating fraction (fel) from eqn 48 in the Ressler 15 paper
+ * 
+ * @param i First grid index
+ * @param j Second grid index
+ * @param k Third grid index
+ * @param P Primitive matrix at the specified gridpoint
+ * @return double fel
+ */
 double get_fel(int i, int j, int k, double P[NVAR])
 {
   #if BETA_HEAT == 0

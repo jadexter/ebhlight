@@ -128,15 +128,37 @@ hsize_t mstart_hdr[1] = {0};
 
 hid_t phfiletype, phmemtype, trackphfiletype, trackphmemtype;
 
-
-#if ELECTRONS
-const char vnams[NVAR][STRLEN] = {"RHO", "UU", "U1", "U2", "U3", "B1", "B2", "B3", "KEL", "KTOT"};
-#else
-const char vnams[NVAR][STRLEN] = {"RHO", "UU", "U1", "U2", "U3", "B1", "B2", "B3"};
-#endif
 static char version[STRLEN], problem_name[STRLEN];
 static int dump_id = 0, restart_id = 0, restart_perm_id = 0, fdump_id = 0;
 static grid_double_type divb;
+
+/**
+ * @brief Sets the primitive variable names before writing to the file
+ * 
+ */
+void set_vnams()
+{
+  strcpy(vnams[RHO],"RHO");
+  strcpy(vnams[UU],"UU");
+  strcpy(vnams[U1],"U1");
+  strcpy(vnams[U2],"U2");
+  strcpy(vnams[U3],"U3");
+  strcpy(vnams[B1],"B1");
+  strcpy(vnams[B2],"B2");
+  strcpy(vnams[B3],"B3");
+  
+  #if ELECTRONS
+  strcpy(vnams[KEL],"KEL");
+  strcpy(vnams[KTOT],"KTOT");
+  #endif
+  #if NONTHERMAL
+  char foostr[STRLEN];
+  NTELOOP{
+    sprintf(foostr,"%e",nteGammas[ip-NTESTART]);
+    strcpy(vnams[ip],foostr);
+  }
+  #endif
+}
 
 /**
  * @brief Initializes the proper folders and files in output directory (/dumps /restarts /xmf)
@@ -615,6 +637,8 @@ void dump()
   #if ELECTRONS
   int has_electrons = ELECTRONS; WRITE_HDR(has_electrons, TYPE_INT);
   #endif
+
+  set_vnams();
 
   WRITE_HDR(metric, TYPE_STR);
   char gridfile[STRLEN] = "grid.h5";

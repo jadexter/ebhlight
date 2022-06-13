@@ -90,7 +90,6 @@ void mhd_calc(double *Pr, int dir, struct of_state *q, double *mhd)
   }
 }
 
-// 
 /**
  * @brief Source terms for equations of motion. Calculate dU[UU,U1,U2,U3] from stress-energy tensor and connection
  * 

@@ -61,7 +61,6 @@ int get_param(char *key, void **data, int *req)
   return 1;
 }
 
-char metric[STRLEN], reconstuction[STRLEN];
 /**
  * @brief Points each entry in table[key].data to the appropriate variables
  * 

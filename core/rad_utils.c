@@ -8,11 +8,30 @@
 
 #include "decs.h"
 
+#if RADIATION || NONTHERMAL
+void set_units()
+{
+  #if METRIC == MKS || METRIC == MMKS
+  L_unit = GNEWT*Mbh/(CL*CL);
+  #endif
+  T_unit = L_unit/CL;
+  RHO_unit = M_unit*pow(L_unit,-3.);
+  U_unit = RHO_unit*CL*CL;
+  B_unit = CL*sqrt(4.*M_PI*RHO_unit);
+  Ne_unit = RHO_unit/(MP + ME);
+
+  #if ELECTRONS
+  Thetae_unit = MP/ME;
+  #elif RADIATION
+  Thetae_unit = (gam-1.)*MP/ME/(1. + tp_over_te);
+  #endif
+  kphys_to_num = ME/M_unit;
+}
+#endif
+
 #if RADIATION
 void init_rad(grid_prim_type Prad)
 {
-  set_units();
-
   ZLOOP {
     sim_vol += ggeom[i][j][CENT].g*dx[1]*dx[2]*dx[3]*L_unit*L_unit*L_unit;
   }
@@ -158,25 +177,6 @@ double linear_interp_log(double x, double *table, double lx_min, double dlx)
   dn = dn - n;
 
   return (1. - dn)*table[n] + dn*table[n+1];
-}
-
-void set_units()
-{
-  #if METRIC == MKS || METRIC == MMKS
-  L_unit = GNEWT*Mbh/(CL*CL);
-  #endif
-  T_unit = L_unit/CL;
-  RHO_unit = M_unit*pow(L_unit,-3.);
-  U_unit = RHO_unit*CL*CL;
-  B_unit = CL*sqrt(4.*M_PI*RHO_unit);
-  Ne_unit = RHO_unit/(MP + ME);
-
-  #if ELECTRONS
-  Thetae_unit = MP/ME;
-  #else
-  Thetae_unit = (gam-1.)*MP/ME/(1. + tp_over_te);
-  #endif
-  kphys_to_num = ME/M_unit;
 }
 
 // Remove superphoton from list and release memory
