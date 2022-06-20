@@ -41,7 +41,7 @@ void init_prob()
     P[i][j][k][UU] = pgas/(gam - 1.);
 
     #if NONTHERMAL
-    NTELOOP P[i][j][k][ip] = 0;
+    inject_nonthermal(P[i][j][k]);
     #endif
   } // ZLOOP
 

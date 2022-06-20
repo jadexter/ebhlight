@@ -195,7 +195,23 @@ int main(int argc, char *argv[])
       if (t >= tdump) {
         dumpThisStep = 1;
         diag(DIAG_DUMP);
+        #if defined(LOGDUMPING)
+          DTd = DTd*10;
+          tdump = DTd;
+        #elif defined(SPECIAL_LOGDUMPING)
+          if (DTd*10 < SPECIAL_LOGDUMPING){
+            DTd = DTd*10;
+          }
+          else if (DTd >= SPECIAL_LOGDUMPING){
+            DTd = DTd + 100;
+          }
+          else{
+            DTd = SPECIAL_LOGDUMPING;
+          }
+          tdump = DTd;
+        #else
         tdump += DTd;
+        #endif
       }
       if (t >= tlog) {
         diag(DIAG_LOG);

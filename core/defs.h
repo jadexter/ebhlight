@@ -48,6 +48,7 @@ double dt_light[N1+2*NG][N2+2*NG], dt_light_min;
 #if NONTHERMAL
 double nteGammas[NTEBINS];
 double log10nteGammas[NTEBINS];
+double log10BinSpace;
 #endif
 
 /*******************************************************************************

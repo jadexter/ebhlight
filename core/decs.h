@@ -246,6 +246,7 @@ extern grid_double_type Qvisc_e, Qvisc_p, Qcoul;
 #if NONTHERMAL
 extern double nteGammas[NTEBINS];
 extern double log10nteGammas[NTEBINS];
+extern double log10BinSpace;
 #endif
 
 /*******************************************************************************
@@ -620,7 +621,7 @@ double gamma_integral(double *ureal);
 double calc_expansion(int i, int j, int k, grid_prim_type Pr);
 void set_nonthermal_gammas();
 void cool_nonthermal(double *Pr, struct of_geom *geom);
-void inject_nonthermal(double *Pr);
+void inject_nonthermal(double *Pr, double powerlaw);
 void calc_gdot_rad(double *Pr, struct of_geom *geom, double *gdot);
 double calc_bsq_cgs(double *Pr, struct of_geom *geom);
 #endif

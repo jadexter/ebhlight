@@ -17,9 +17,9 @@ void step_nonthermal(grid_prim_type Pr)
 {
     #pragma omp parallel for collapse(3)
     ZLOOP{
+        inject_nonthermal(Pr[i][j][k],-2.5);
         nonthermal_adiab(i, j, k, Pr);
-        inject_nonthermal(Pr[i][j][k]);
-        cool_nonthermal(Pr[i][j][k], &(ggeom[i][j][CENT]));
+        // cool_nonthermal(Pr[i][j][k], &(ggeom[i][j][CENT]));
     }
 }
 
@@ -37,38 +37,52 @@ void nonthermal_adiab(int i, int j, int k, grid_prim_type Pr){
     // TODO: Viscous dissipation rate and injection terms into thermal and nonthermal pops (Chael section 3.2 iii and eq. 26/29)
 
     double adiab = calc_expansion(i,j,k,Pr);
+    adiab = -5e-3;
     double nprime[NTEBINS], deltan[NTEBINS], ngamma[NTEBINS];
 
     NTEGAMMALOOP ngamma[ig] = Pr[i][j][k][ig+NTESTART];
+
+    // Find the initial values of n and u to compare to the final values
+    // double n_tot_start = gamma_integral(ngamma);
+
     // Find dn/dgamma for use in Chael eq. 47
     nonthermal_adiab_upwind(adiab, ngamma, nprime);
 
     // Find dtau
     struct of_state q;
     struct of_geom *geom;
-    double dtau;
     geom = &ggeom[i][j][CENT];
     get_state(Pr[i][j][k], geom, &q);
-    dtau = dt/(q.ucon[0]);
 
-    // Find change in n and the resulting real energy change (Chael eq. 47 and 11)
-    double ureal[NTEBINS], utot, uexpected[NTEBINS], utotexpected;
+    double dtau = dt/(q.ucon[0]);
+    
+
+    #ifdef ADIABTIC_SCALING
+        // Find change in n and the resulting real energy change (Chael eq. 47 and 11)
+        double ureal[NTEBINS], utot, uexpected[NTEBINS], utotexpected;
+    #endif
 
     NTEGAMMALOOP {
-        deltan[ig] = dtau*(adiab/3.)*( (1+pow(nteGammas[ig],-2))*ngamma[ig] + (nteGammas[ig]-(1/nteGammas[ig]))*nprime[ig] );
+        // Version with semi-analytic derivative
+        // deltan[ig] = dtau*(adiab/3.)*( (1+pow(nteGammas[ig],-2))*ngamma[ig] + (nteGammas[ig]-(1/nteGammas[ig]))*nprime[ig] );
+        deltan[ig] = dtau*(adiab/3.)*nprime[ig];
 
-        uexpected[ig] = -1*dtau*ME*(adiab/3.)*(nteGammas[ig]-(1./nteGammas[ig]))*ngamma[ig];
-        ureal[ig] = ME*(nteGammas[ig]-1.)*deltan[ig];
+        #ifdef ADIABTIC_SCALING
+            uexpected[ig] = -1*dtau*ME*(adiab/3.)*(nteGammas[ig]-(1./nteGammas[ig]))*ngamma[ig];
+            ureal[ig] = ME*(nteGammas[ig]-1.)*deltan[ig];
+        #endif
     }
 
-    // Rescale change by expected vs actual energies to preserve energy
-    utot = gamma_integral(ureal);
-    utotexpected = gamma_integral(uexpected);
+    #ifdef ADIABTIC_SCALING
+        // Rescale change by expected vs actual energies to preserve energy
+        utot = gamma_integral(ureal);
+        utotexpected = gamma_integral(uexpected);
+    #endif
 
     NTEGAMMALOOP{
-        if (utotexpected != 0){
-            deltan[ig] *= utotexpected/utot;
-        }
+        #ifdef ADIABTIC_SCALING
+            if ((fabs(utotexpected) > SMALL) && (fabs(utot) > SMALL)) deltan[ig] *= utotexpected/utot;
+        #endif
 
         // Apply the change to the bins
         Pr[i][j][k][ig+NTESTART] += deltan[ig];
@@ -96,7 +110,7 @@ double gamma_integral(double *ureal){
 
     NTEGAMMALOOP{
         if(ig == NTEBINS-1)
-            dg = nteGammas[ig] - nteGammas[ig-1];
+            dg = pow(10,log10nteGammas[ig]+log10BinSpace) - nteGammas[ig];
         else 
             dg = nteGammas[ig+1] - nteGammas[ig];
         utot += ureal[ig]*dg;
@@ -116,34 +130,70 @@ void nonthermal_adiab_upwind(double adiab, double *ngamma, double *nprime)
     // TODO: Should probably do some testing here...
     // TODO: Would doing this in logspace be easier? Also confirm it's always upwind
 
+    int sign;
     double upwind, current, dg;
+    double fgam[NTEBINS];
+
+    // dg = (log10(NTGAMMAMAX) - log10(NTGAMMAMIN))/((double)(NTEBINS-1))*log(10);
+
+    NTEGAMMALOOP fgam[ig] = (nteGammas[ig]-1/nteGammas[ig])*ngamma[ig];
 
     NTEGAMMALOOP{
-        current = ngamma[ig];
+        current = fgam[ig];
 
-        // Gas expanding
-        if(adiab>0){
+        // Expanding
+        if(adiab > 0){
+            sign = 1;
             if(ig == (NTEBINS-1)){
                 upwind = 0;
-                dg = nteGammas[ig]-nteGammas[ig-1];
+                dg = (nteGammas[ig]-nteGammas[ig-1]);
             }
             else{
-                upwind = ngamma[ig+1];
-                dg = nteGammas[ig+1]-nteGammas[ig];
+                upwind = fgam[ig+1];
+                dg = (nteGammas[ig+1]-nteGammas[ig]);
             } 
         }
-        // Gas compressing
+        // Compressing
         else{
+            sign = -1;
             if(ig == 0){
                 upwind = 0;
-                dg = nteGammas[ig]-nteGammas[ig+1];
+                dg = (nteGammas[ig+1]-nteGammas[ig]);
             }
             else{
-                upwind = ngamma[ig-1];
-                dg = nteGammas[ig-1]-nteGammas[ig];
+                upwind = fgam[ig-1];
+                dg = (nteGammas[ig]-nteGammas[ig-1]);
             } 
         }
-        nprime[ig] = (upwind-current)/dg;
+        //Derivative
+        nprime[ig] = sign*(upwind-current)/dg;
+
+
+        // current = ngamma[ig];
+
+        // // Gas expanding
+        // if(adiab>0){
+        //     if(ig == (NTEBINS-1)){
+        //         upwind = 0;
+        //         dg = nteGammas[ig]-nteGammas[ig-1];
+        //     }
+        //     else{
+        //         upwind = ngamma[ig+1];
+        //         dg = nteGammas[ig+1]-nteGammas[ig];
+        //     } 
+        // }
+        // // Gas compressing
+        // else{
+        //     if(ig == 0){
+        //         upwind = 0;
+        //         dg = nteGammas[ig]-nteGammas[ig+1];
+        //     }
+        //     else{
+        //         upwind = ngamma[ig-1];
+        //         dg = nteGammas[ig-1]-nteGammas[ig];
+        //     } 
+        // }
+        // nprime[ig] = (upwind-current)/dg;
     }
 
 }
@@ -230,7 +280,7 @@ void set_nonthermal_gammas()
     // TODO: May want to use ln instead of log10
     // TODO: when I add injection, there may be some check here to make sure injection min/max is valid
 
-    double log10BinSpace = (log10(NTGAMMAMAX) - log10(NTGAMMAMIN))/((double)(NTEBINS-1));
+    log10BinSpace = (log10(NTGAMMAMAX) - log10(NTGAMMAMIN))/((double)(NTEBINS-1));
     log10nteGammas[0] = log10(NTGAMMAMIN);
     nteGammas[0] = NTGAMMAMIN;
 
@@ -247,20 +297,23 @@ void set_nonthermal_gammas()
  * @param geom Geometry in the zone being cooled
  */
 void cool_nonthermal(double *Pr, struct of_geom *geom){
-    double gdot[NTEBINS];
+    double gdot[NTEBINS], ngammas[NTEBINS];
     double dg = log(nteGammas[1])-log(nteGammas[0]);
 
-    NTEGAMMALOOP gdot[ig] = 0;
+    NTEGAMMALOOP{
+        gdot[ig] = 0;
+        ngammas[ig] = Pr[ig+NTESTART];
+    } 
 
     calc_gdot_rad(Pr, geom, gdot);
 
     // Upwind derivative updates each n(gamma) bin
     NTEGAMMALOOP{
         if(ig == NTEBINS-1){
-            Pr[ig+NTESTART] -= dt*(-gdot[ig]*Pr[ig+NTESTART])/(dg*nteGammas[ig]);
+            Pr[ig+NTESTART] -= dt*(-gdot[ig]*ngammas[ig])/(dg*nteGammas[ig]);
         }
         else{
-            Pr[ig+NTESTART] -= dt*(gdot[ig+1]*Pr[ig+NTESTART+1]-gdot[ig]*Pr[ig+NTESTART])/(dg*nteGammas[ig]);
+            Pr[ig+NTESTART] -= dt*(gdot[ig+1]*ngammas[ig+1]-gdot[ig]*ngammas[ig])/(dg*nteGammas[ig]);
         }
 
         if (Pr[ig+NTESTART] < SMALL){
@@ -274,20 +327,19 @@ void cool_nonthermal(double *Pr, struct of_geom *geom){
  * 
  * @param Pr 
  */
-void inject_nonthermal(double *Pr){
+void inject_nonthermal(double *Pr, double powerlaw){
     // TODO: Add parameters passed at compile time for maximum and minimum injection gammas, C and p
     // TODO: This currently only handles constant, user defined injection but this should definitely change...
 
-    double gammainjmax = 5e5;
-    double gammainjmin = 50;
-    double normalization = 10;
-    double powerlaw = -3.5;
+    double gammainjmax = 1e5;
+    double gammainjmin = 500;
+    double normalization = 1;
     double gammatemp;
 
     NTEGAMMALOOP{
         gammatemp = nteGammas[ig];
         if((gammatemp <= gammainjmax) && (gammatemp >= gammainjmin)){
-            Pr[ig + NTESTART] += normalization*pow(gammatemp,powerlaw);
+            Pr[ig + NTESTART] += dt*normalization*pow(gammatemp,powerlaw);
         }
     } 
 }
@@ -375,5 +427,12 @@ double calc_bsq_cgs(double *Pr, struct of_geom *geom){
 
     return dot(Bcon,Bcov);
 }
+
+// void viscous_heating(){
+//     // Need to find: u_ith  u_eth  u_nteth
+//     double Tp = 
+
+// }
+
 
 #endif

@@ -360,7 +360,7 @@ void lr_to_flux(double P_l[NVAR], double P_r[NVAR], struct of_geom *geom,
   mhd_vchar(P_l, &state_l, geom, dir, &cmax_l, &cmin_l);
   mhd_vchar(P_r, &state_r, geom, dir, &cmax_r, &cmin_r);
 
-  // This makes the sumption that cmax ~= cmin
+  // This makes the assumption that cmax ~= cmin
   cmax = fabs(MY_MAX(MY_MAX(0., cmax_l), cmax_r));
   cmin = fabs(MY_MAX(MY_MAX(0., -cmin_l), -cmin_r));
   ctop = MY_MAX(cmax, cmin);
