@@ -58,8 +58,11 @@ def load_hdr(fname):
   hdr['METRIC'] = h5_to_str(read_scalar(dfile, '/header/metric'))
   hdr['ELECTRONS'] = '/header/has_electrons' in dfile.keys()
   hdr['RADIATION'] = '/header/has_radiation' in dfile.keys()
+  hdr['NONTHERMAL'] = '/header/has_nonthermal' in dfile.keys()
   hdr['FLOORADV'] = '/header/has_flooradv' in dfile.keys()
   hdr['NVAR'] = read_scalar(dfile, '/header/n_prim')
+  if hdr['NONTHERMAL']:
+    hdr['NTEBINS'] = read_scalar(dfile, '/header/n_nte')
   hdr['tf'] = read_scalar(dfile, '/header/tf')
   hdr['startx'] = np.array([0, read_scalar(dfile, '/header/geom/startx1'),
     read_scalar(dfile, '/header/geom/startx2'), read_scalar(dfile, '/header/geom/startx3')])

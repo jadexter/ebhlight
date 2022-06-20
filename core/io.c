@@ -637,6 +637,9 @@ void dump()
   #if ELECTRONS
   int has_electrons = ELECTRONS; WRITE_HDR(has_electrons, TYPE_INT);
   #endif
+  #if NONTHERMAL
+  int has_nonthermal = NONTHERMAL; WRITE_HDR(has_nonthermal, TYPE_INT);
+  #endif
 
   set_vnams();
 
@@ -648,6 +651,9 @@ void dump()
   int n2 = N2TOT; WRITE_HDR(n2, TYPE_INT);
   int n3 = N3TOT; WRITE_HDR(n3, TYPE_INT);
   int n_prim = NVAR; WRITE_HDR(n_prim, TYPE_INT);
+  #if NONTHERMAL
+  int n_nte = NTEBINS; WRITE_HDR(n_nte, TYPE_INT);
+  #endif
   hdf5_write_str_list(vnams, "prim_names", file_id, STRLEN, NVAR);  
 
   WRITE_HDR(gam, TYPE_DBL);

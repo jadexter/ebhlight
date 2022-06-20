@@ -111,7 +111,7 @@ void set_core_params()
   set_param("cour", &cour);
   set_param("gam", &gam);
 
-  #if RADIATION
+  #if RADIATION || NONTHERMAL
   #if METRIC == CARTESIAN
   set_param("L_unit", &L_unit);
   set_param("M_unit", &M_unit);
