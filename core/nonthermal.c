@@ -149,13 +149,13 @@ void nonthermal_adiab_upwind(double adiab, double *ngamma, double *nprime)
 }
 
 /**
- * @brief Calculate the divergence of the four-velocity (expansion/contraction term). Uses {u^\{alpha}}_{;\mu} = (sqrt(g)*u^\alpha)_,\alpha / sqrt(g)
+ * @brief Calculate the divergence of the four-velocity (expansion/contraction term). Uses {u^\{alpha}}_{;\alpha} = (sqrt(g)*u^\alpha)_,\alpha / sqrt(g)
  * 
  * @param i grid coordinate 1
  * @param j grid coordinate 2
  * @param k grid coordinate 3
  * @param Pr Active primitives
- * @return double {u^\{alpha}}_{;\mu}
+ * @return double {u^\{alpha}}_{;\alpha}
  */
 double calc_expansion(int i, int j, int k, grid_prim_type Pr){
     struct of_state ql, qc, qr;
