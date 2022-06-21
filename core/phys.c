@@ -42,6 +42,10 @@ void primtoflux(double *Pr, struct of_state *q, int dir, struct of_geom *geom, d
   flux[KTOT] = flux[RHO]*Pr[KTOT];
   #endif // ELECTRONS
 
+  #if NONTHERMAL
+  NTELOOP flux[ip] = Pr[ip]*q->ucon[dir];
+  #endif // NONTHERMAL
+
   //Multiply by sqrt(-g)
   PLOOP flux[ip] *= geom->g;
 }

@@ -139,7 +139,7 @@ int Utoprim(double U[NVAR], struct of_geom *geom, double prim[NVAR])
   }
 
   // Find the scalars
-  rho0 = D/gamma;
+  rho0 = D/gamma; // U[RHO]*lapse/(gamma*geom->g)
   W = Wp + D;
   w = W/(gamma*gamma);
   P = Pressure_rho0_w(rho0, w);
@@ -164,6 +164,10 @@ int Utoprim(double U[NVAR], struct of_geom *geom, double prim[NVAR])
   prim[KEL] = U[KEL]/U[RHO];
   prim[KTOT] = U[KTOT]/U[RHO];
   #endif // ELECTRONS
+
+  #if NONTHERMAL
+  NTELOOP prim[ip] = U[ip]*lapse/(gamma*(geom->g));
+  #endif
 
   return(0);
 }

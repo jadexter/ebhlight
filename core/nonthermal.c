@@ -13,12 +13,13 @@
 #define INVERSE_COMPTON (0)
 
 #if NONTHERMAL
+#endif
 void step_nonthermal(grid_prim_type Pr)
 {
     #pragma omp parallel for collapse(3)
     ZLOOP{
-        inject_nonthermal(Pr[i][j][k],-2.5);
-        nonthermal_adiab(i, j, k, Pr);
+        // inject_nonthermal(Pr[i][j][k],-2.5);
+        // nonthermal_adiab(i, j, k, Pr);
         // cool_nonthermal(Pr[i][j][k], &(ggeom[i][j][CENT]));
     }
 }
@@ -167,33 +168,6 @@ void nonthermal_adiab_upwind(double adiab, double *ngamma, double *nprime)
         }
         //Derivative
         nprime[ig] = sign*(upwind-current)/dg;
-
-
-        // current = ngamma[ig];
-
-        // // Gas expanding
-        // if(adiab>0){
-        //     if(ig == (NTEBINS-1)){
-        //         upwind = 0;
-        //         dg = nteGammas[ig]-nteGammas[ig-1];
-        //     }
-        //     else{
-        //         upwind = ngamma[ig+1];
-        //         dg = nteGammas[ig+1]-nteGammas[ig];
-        //     } 
-        // }
-        // // Gas compressing
-        // else{
-        //     if(ig == 0){
-        //         upwind = 0;
-        //         dg = nteGammas[ig]-nteGammas[ig+1];
-        //     }
-        //     else{
-        //         upwind = ngamma[ig-1];
-        //         dg = nteGammas[ig-1]-nteGammas[ig];
-        //     } 
-        // }
-        // nprime[ig] = (upwind-current)/dg;
     }
 
 }
