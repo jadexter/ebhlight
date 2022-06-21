@@ -247,8 +247,8 @@ void init_core()
   #if RADIATION || COOLING
   set_units();
   #endif
-  #if COOLING
-  #if TCOOL == 1
+  #if COOLING && (TCOOL == 1)
+  #if (METRIC == MKS || METRIC == MMKS)
   set_ISCOquantities();
   #endif
   #endif

@@ -323,6 +323,7 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
 
   // calculate cooling rate L following Noble+
   Tel_star = Tel_target*pow(r,-1.*Tel_rslope);
+  // fprintf(stdout, "Te target: %.4f\n", Tel_star);
   Y = Tel/Tel_star-1.;
   //L = Omega*uel*pow((Y*(1.+sign(Y))),1./2.);
   //     L = Omega*uel*(Y+abs(Y));

@@ -12,7 +12,7 @@
 void set_units()
 {
   #if METRIC == MKS || METRIC == MMKS
-  L_unit = GNEWT*Mbh/(CL*CL); // rg
+  L_unit = GNEWT*Mbh/(CL*CL); // rg. Overwrites input.
   #endif
   T_unit = L_unit/CL;
   RHO_unit = M_unit*pow(L_unit,-3.);
@@ -31,8 +31,8 @@ void set_units()
 }
 #endif
 
-#if COOLING
-#if TCOOL == 1
+#if COOLING && (TCOOL == 1)
+#if METRIC == MKS || METRIC == MMKS
 void set_ISCOquantities()
 {
   double thetaMidplane = M_PI/2.0;

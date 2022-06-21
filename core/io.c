@@ -670,12 +670,12 @@ void dump()
   #if COOLING
   WRITE_HDR(Tel_target, TYPE_DBL);
   WRITE_HDR(Tel_rslope, TYPE_DBL);
+  WRITE_HDR(q_constant, TYPE_DBL);
   #if TCOOL == 0
   WRITE_HDR(tcool0, TYPE_DBL);
   #endif
   #if TCOOL == 1
   WRITE_HDR(tcoolOmega0, TYPE_DBL);
-  WRITE_HDR(q_constant, TYPE_DBL);
   #endif
   #endif
 

@@ -225,7 +225,7 @@ extern grid_double_type Qvisc_e, Qvisc_p, Qcoul;
 #endif // ELECTRONS
 #if COOLING
 extern grid_double_type Qcool;
-#if TCOOL == 1
+#if (TCOOL == 1) && (METRIC == MKS || METRIC == MMKS)
 extern double Kmu[4];
 #endif
 #endif // COOLING
@@ -637,8 +637,8 @@ void push_superphotons(double dt);
 #if RADIATION || COOLING
 void set_units();
 #endif
-#if COOLING
-#if TCOOL == 1
+#if COOLING && (TCOOL == 1)
+#if METRIC == MKS || METRIC == MMKS
 void set_ISCOquantities();
 #endif
 #endif
