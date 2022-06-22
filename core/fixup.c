@@ -186,6 +186,9 @@ void fixup_utoprim(grid_prim_type Pv)
   #pragma omp parallel for collapse(3)
   ZSLOOP(-NG,N1+NG-1,-NG,N2+NG-1,-NG,N3+NG-1) {
     FLOOP Pv_tmp[i][j][k][ip] = Pv[i][j][k][ip];
+    #if NONTHERMAL
+    NTELOOP Pv_tmp[i][j][k][ip] = Pv[i][j][k][ip];
+    #endif
   }
   #if ELECTRONS
   // Average electron internal energy rather than electron entropy
@@ -218,6 +221,9 @@ void fixup_utoprim(grid_prim_type Pv)
       #if ELECTRONS
       double sume = 0.;
       #endif
+      #if NONTHERMAL
+      double ntesum[NTEBINS] = {0};
+      #endif
       
       // Average primitive variables over good neighbors, weighted by distance
       for(int l = -1; l < 2; l++) {
@@ -228,6 +234,9 @@ void fixup_utoprim(grid_prim_type Pv)
             FLOOP sum[ip] += w*Pv_tmp[i+l][j+m][k+n][ip];
             #if ELECTRONS
             sume += w*uel[i+l][j+m][k+n];
+            #endif
+            #if NONTHERMAL
+            NTEGAMMALOOP ntesum[ig] += w*Pv_tmp[i+l][j+m][k+n][ig+NTESTART];
             #endif
           }
         }
@@ -242,6 +251,10 @@ void fixup_utoprim(grid_prim_type Pv)
         #if ELECTRONS
         sume = 0.;
         #endif
+        #if NONTHERMAL
+        // Could probably do this with memset for faster setting, maybe memset(ntesum, 0, NTEBINS*8)
+        NTEGAMMALOOP ntesum[ig]=0;
+        #endif
         for(int l = -1; l < 2; l++) {
           for(int m = -1; m < 2; m++) {
             for(int n= -1; n < 2; n++) {
@@ -250,6 +263,9 @@ void fixup_utoprim(grid_prim_type Pv)
               FLOOP sum[ip] += w*Pv_tmp[i+l][j+m][k+n][ip];
               #if ELECTRONS
               sume += w*uel[i+l][j+m][k+n];
+              #endif
+              #if NONTHERMAL
+              NTEGAMMALOOP ntesum[ig] += w*Pv_tmp[i+l][j+m][k+n][ig+NTESTART];
               #endif
             }
           }
@@ -264,6 +280,9 @@ void fixup_utoprim(grid_prim_type Pv)
       #if ELECTRONS
       Pv[i][j][k][KEL] = (gam-1.)*uel[i][j][k]/pow(Pv[i][j][k][RHO],game);
       Pv[i][j][k][KTOT] = (gam-1.)*(Pv[i][j][k][UU])/pow(Pv[i][j][k][RHO],gam);
+      #endif
+      #if NONTHERMAL
+      NTELOOP Pv[i][j][k][ip] = ntesum[ip-NTESTART]/wsum;
       #endif
 
       fixup1zone(i, j, k, Pv[i][j][k]);

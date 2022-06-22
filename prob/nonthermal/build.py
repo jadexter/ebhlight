@@ -11,7 +11,7 @@ PROB = 'nonthermal'
 ### COMPILE TIME PARAMETERS ###
 
 # SPATIAL RESOLUTION AND MPI DECOMPOSITION
-bhl.config.set_cparm('N1TOT', 4)
+bhl.config.set_cparm('N1TOT', 40)
 bhl.config.set_cparm('N2TOT', 1)
 bhl.config.set_cparm('N3TOT', 1)
 bhl.config.set_cparm('N1CPU', 1)

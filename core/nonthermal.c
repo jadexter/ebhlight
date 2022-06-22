@@ -13,12 +13,11 @@
 #define INVERSE_COMPTON (0)
 
 #if NONTHERMAL
-#endif
 void step_nonthermal(grid_prim_type Pr)
 {
     #pragma omp parallel for collapse(3)
     ZLOOP{
-        // inject_nonthermal(Pr[i][j][k],-2.5);
+        // inject_nonthermal(Pr[i][j][k],-2.5,1);
         // nonthermal_adiab(i, j, k, Pr);
         // cool_nonthermal(Pr[i][j][k], &(ggeom[i][j][CENT]));
     }
@@ -301,13 +300,12 @@ void cool_nonthermal(double *Pr, struct of_geom *geom){
  * 
  * @param Pr 
  */
-void inject_nonthermal(double *Pr, double powerlaw){
+void inject_nonthermal(double *Pr, double powerlaw, double normalization){
     // TODO: Add parameters passed at compile time for maximum and minimum injection gammas, C and p
     // TODO: This currently only handles constant, user defined injection but this should definitely change...
 
     double gammainjmax = 1e5;
     double gammainjmin = 500;
-    double normalization = 1;
     double gammatemp;
 
     NTEGAMMALOOP{

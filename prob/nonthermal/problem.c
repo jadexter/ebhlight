@@ -14,7 +14,7 @@ static int test_type;
 void set_problem_params()
 {
   set_param("plaw", &plaw);
-  set_param("test_type", &nmode);
+  set_param("test_type", &test_type);
 }
 void save_problem_params()
 {
@@ -42,7 +42,7 @@ void init_prob()
 
     rhoL = 1.;
     PL = 10.;
-    u1L = 1.;
+    u1L = 0.;
     u2L = 0.;
     u3L = 0.;
     B1L = 0.;
@@ -50,7 +50,7 @@ void init_prob()
     B3L = 0.;
     rhoR = 1.;
     PR = 10.;
-    u1R = 1.;
+    u1R = 10.;
     u2R = 0.;
     u3R = 0.;
     B1R = 0.;
@@ -69,9 +69,11 @@ void init_prob()
       P[i][j][k][B1]  = (X[1] < 0.) ? B1L : B1R;
       P[i][j][k][B2]  = (X[1] < 0.) ? B2L : B2R;
       P[i][j][k][B3]  = (X[1] < 0.) ? B3L : B3R;
+
+      inject_nonthermal(P[i][j][k], plaw,100*(i+1));
     } // ZLOOP
 
-    inject_nonthermal(P[NG][NG][NG], plaw);
+    
   }
 }
 

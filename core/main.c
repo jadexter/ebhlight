@@ -284,7 +284,9 @@ void init_core()
  */
 void init_final()
 {
+  #if NONTHERMAL
   set_units();
+  #endif
   #if RADIATION
   init_rad(P);
   set_weight(P); 

@@ -151,5 +151,5 @@ plt.subplots_adjust(wspace=0.15)
 plt.savefig('sod.png', bbox_inches='tight')
 
 # CLEAN UP
-util.safe_remove(TMP_DIR)
+# util.safe_remove(TMP_DIR)
 

@@ -25,6 +25,10 @@ bhl.config.set_cparm('OPENMP', False)
 # COORDINATES
 bhl.config.set_cparm('METRIC', 'MINKOWSKI')
 
+# NONTHERMAL
+bhl.config.set_cparm('NONTHERMAL', True)
+bhl.config.set_cparm('ADIABTIC_SCALING', True)
+
 # FLUID
 bhl.config.set_cparm('RECONSTRUCTION', 'WENO')
 bhl.config.set_cparm('X1L_GAS_BOUND', 'BC_OUTFLOW')
@@ -45,6 +49,8 @@ bhl.config.set_cparm('X3R_INFLOW', False)
 bhl.config.set_rparm('tf', 'double', default = 0.25)
 bhl.config.set_rparm('dt', 'double', default = 0.25e-6)
 bhl.config.set_rparm('gam', 'double', default = 1.4)
+bhl.config.set_rparm('L_unit', 'double', default = 1.5032e6)
+bhl.config.set_rparm('M_unit', 'double', default = 1.42034e12)
 bhl.config.set_rparm('DTd', 'double', default = 0.25e-1)
 bhl.config.set_rparm('DTl', 'double', default = 0.25e-2)
 bhl.config.set_rparm('DTr', 'double', default = 12837612)
