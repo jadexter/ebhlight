@@ -31,14 +31,29 @@ void init_electrons()
   bound_prim(P);
 }
 
+/**
+ * @brief Loops through zones calculating the new entropies
+ * 
+ * @param Pi Current primitives
+ * @param Ps Half-step primitives
+ * @param Pf Empty primitives to store final value  
+ * @param Dt dt
+ */
 void heat_electrons(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf,
   double Dt)
 {
   timer_start(TIMER_ELECTRON);
-  #pragma omp parallel for collapse(3) schedule(dynamic)
-  ZLOOP {
-    heat_electrons_zone(i, j, k, Pi[i][j][k], Ps[i][j][k], Pf[i][j][k], Dt);
-  }
+  #if NONTHERMAL
+    #pragma omp parallel for collapse(3) schedule(dynamic)
+    ZLOOP {
+      heat_electrons_zone_nonthermal(i, j, k, Pi[i][j][k], Ps[i][j][k], Pf[i][j][k], Dt);
+    }
+  #else
+    #pragma omp parallel for collapse(3) schedule(dynamic)
+    ZLOOP {
+      heat_electrons_zone(i, j, k, Pi[i][j][k], Ps[i][j][k], Pf[i][j][k], Dt);
+    }
+  #endif
   timer_stop(TIMER_ELECTRON);
 }
 

@@ -13,14 +13,56 @@
 #define INVERSE_COMPTON (0)
 
 #if NONTHERMAL
-void step_nonthermal(grid_prim_type Pr)
-{
-    #pragma omp parallel for collapse(3)
-    ZLOOP{
-        // inject_nonthermal(Pr[i][j][k],-2.5,1);
-        // nonthermal_adiab(i, j, k, Pr);
-        // cool_nonthermal(Pr[i][j][k], &(ggeom[i][j][CENT]));
+void nonthermal_adiab(grid_prim_type Pi, grid_prim_type Pf, double Dt){
+    // I worry since the expasion depends on the primitive left and right values that the values may be overwritten as the expansion is calculated...
+    #pragma omp parallel for collapse(3) schedule(dynamic)
+    ZLOOP {
+      nonthermal_adiab_zone(i, j, k, Pi, Pf, Dt);
     }
+}
+
+void cool_nonthermal(grid_prim_type Pi, grid_prim_type Pf, double Dt){
+    #pragma omp parallel for collapse(3) schedule(dynamic)
+    ZLOOP {
+      cool_nonthermal_zone(Pi[i][j][k], Pf[i][j][k], &(ggeom[i][j][CENT]), Dt);
+    }
+}
+
+/**
+ * @brief Applies radiative cooling to one zone
+ * 
+ * @param Pr Primitives to calculate the cooling from
+ * @param Pf Primitives to apply the cooled result
+ * @param geom Geometry in the zone being cooled
+ */
+void cool_nonthermal_zone(double *Pi, double *Pf, struct of_geom *geom, double Dt){
+    double gdot[NTEBINS], ngammas[NTEBINS];
+    double dg = log(nteGammas[1])-log(nteGammas[0]);
+
+    NTEGAMMALOOP{
+        gdot[ig] = 0;
+        ngammas[ig] = Pf[ig+NTESTART];
+    } 
+
+    calc_gdot_rad(Pf, geom, gdot);
+
+    // Upwind derivative updates each n(gamma) bin
+    NTEGAMMALOOP{
+        if(ig == NTEBINS-1){
+            Pf[ig+NTESTART] -= Dt*(-gdot[ig]*ngammas[ig])/(dg*nteGammas[ig]);
+        }
+        else{
+            Pf[ig+NTESTART] -= Dt*(gdot[ig+1]*ngammas[ig+1]-gdot[ig]*ngammas[ig])/(dg*nteGammas[ig]);
+        }
+
+        if (Pf[ig+NTESTART] < SMALL){
+            Pf[ig+NTESTART] = 0;
+        }
+    }
+
+    // Update thermal electrons with cooling nonthermal electrons
+    double qcool = -ME*gdot[0]*(nteGammas[0]-1)*ngammas[0];
+    qcool += 1; // remove later (just to avoid unused warning)
 }
 
 /**
@@ -31,16 +73,16 @@ void step_nonthermal(grid_prim_type Pr)
  * @param k Dimension 3 index
  * @param Pr Full primitives matrix (need neighboring zones as well)
  */
-void nonthermal_adiab(int i, int j, int k, grid_prim_type Pr){
+void nonthermal_adiab_zone(int i, int j, int k, grid_prim_type Pi, grid_prim_type Pf, double Dt){
     // TODO: Definitely needs testing...
     // TODO: Include the electrons returning to the thermal distribution (Chael section 3.2 ii)
     // TODO: Viscous dissipation rate and injection terms into thermal and nonthermal pops (Chael section 3.2 iii and eq. 26/29)
 
-    double adiab = calc_expansion(i,j,k,Pr);
+    double adiab = calc_expansion(i,j,k,Pi,Pf,Dt);
     adiab = -5e-3;
     double nprime[NTEBINS], deltan[NTEBINS], ngamma[NTEBINS];
 
-    NTEGAMMALOOP ngamma[ig] = Pr[i][j][k][ig+NTESTART];
+    NTEGAMMALOOP ngamma[ig] = Pf[i][j][k][ig+NTESTART];
 
     // Find the initial values of n and u to compare to the final values
     // double n_tot_start = gamma_integral(ngamma);
@@ -52,9 +94,9 @@ void nonthermal_adiab(int i, int j, int k, grid_prim_type Pr){
     struct of_state q;
     struct of_geom *geom;
     geom = &ggeom[i][j][CENT];
-    get_state(Pr[i][j][k], geom, &q);
+    get_state(Pf[i][j][k], geom, &q);
 
-    double dtau = dt/(q.ucon[0]);
+    double dtau = Dt/(q.ucon[0]);
     
 
     #ifdef ADIABTIC_SCALING
@@ -85,11 +127,11 @@ void nonthermal_adiab(int i, int j, int k, grid_prim_type Pr){
         #endif
 
         // Apply the change to the bins
-        Pr[i][j][k][ig+NTESTART] += deltan[ig];
+        Pf[i][j][k][ig+NTESTART] += deltan[ig];
 
         // Floor bins (ie. no negative n)
-        if(Pr[i][j][k][ig+NTESTART] < 0){
-            Pr[i][j][k][ig+NTESTART] = 0.;
+        if(Pf[i][j][k][ig+NTESTART] < 0){
+            Pf[i][j][k][ig+NTESTART] = 0.;
         }
     }
     
@@ -180,7 +222,7 @@ void nonthermal_adiab_upwind(double adiab, double *ngamma, double *nprime)
  * @param Pr Active primitives
  * @return double {u^\{alpha}}_{;\alpha}
  */
-double calc_expansion(int i, int j, int k, grid_prim_type Pr){
+double calc_expansion(int i, int j, int k, grid_prim_type Pi, grid_prim_type Pf, double Dt){
     struct of_state ql, qc, qr;
     struct of_geom *geoml, *geomc, *geomr;
     double Xl[NDIM], Xc[NDIM], Xr[NDIM];
@@ -190,21 +232,23 @@ double calc_expansion(int i, int j, int k, grid_prim_type Pr){
 
     // Center:
     geomc = &ggeom[i][j][CENT];
-    get_state(Pr[i][j][k], geomc, &qc);
+    get_state(Pf[i][j][k], geomc, &qc);
     coord(i,j,k,CENT,Xc);
 
 
     // Dimension 0:
-    du[0]=0;
+    double pucon[NDIM];
+    ucon_calc(Pi[i][j][k], geomc, pucon);
+    du[0] = ( (geomc->g)*(qc.ucon[0])-(geomc->g)*(pucon[0]) )/Dt;
 
 
     // Dimension 1:
     geoml = &ggeom[i-1][j][CENT];
-    get_state(Pr[i-1][j][k], geoml, &ql);
+    get_state(Pf[i-1][j][k], geoml, &ql);
     coord(i-1,j,k,CENT,Xl);
 
     geomr = &ggeom[i+1][j][CENT];
-    get_state(Pr[i+1][j][k], geomr, &qr);
+    get_state(Pf[i+1][j][k], geomr, &qr);
     coord(i+1,j,k,CENT,Xr);
 
     // Could add the option later but I'll just do the center derivative for now
@@ -213,11 +257,11 @@ double calc_expansion(int i, int j, int k, grid_prim_type Pr){
 
     // Dimension 2:
     geoml = &ggeom[i][j-1][CENT];
-    get_state(Pr[i][j-1][k], geoml, &ql);
+    get_state(Pf[i][j-1][k], geoml, &ql);
     coord(i,j-1,k,CENT,Xl);
 
     geomr = &ggeom[i][j+1][CENT];
-    get_state(Pr[i][j+1][k], geomr, &qr);
+    get_state(Pf[i][j+1][k], geomr, &qr);
     coord(i,j+1,k,CENT,Xr);
 
     // Could add the option later but I'll just do the center derivative for now
@@ -226,11 +270,11 @@ double calc_expansion(int i, int j, int k, grid_prim_type Pr){
 
     // Dimension 3:
     geoml = &ggeom[i][j][CENT];
-    get_state(Pr[i][j][k-1], geoml, &ql);
+    get_state(Pf[i][j][k-1], geoml, &ql);
     coord(i,j,k-1,CENT,Xl);
 
     geomr = &ggeom[i][j][CENT];
-    get_state(Pr[i][j][k+1], geomr, &qr);
+    get_state(Pf[i][j][k+1], geomr, &qr);
     coord(i,j,k+1,CENT,Xr);
 
     // Could add the option later but I'll just do the center derivative for now
@@ -257,42 +301,20 @@ void set_nonthermal_gammas()
     log10nteGammas[0] = log10(NTGAMMAMIN);
     nteGammas[0] = NTGAMMAMIN;
 
+    double normterms[NTEBINS] = {0};
+    double currgamma;
+
     for (int ig = 1; ig<NTEBINS; ig++){
         log10nteGammas[ig] = log10nteGammas[ig-1] + log10BinSpace;
         nteGammas[ig] = pow(10,log10nteGammas[ig]);
-    }
-}
 
-/**
- * @brief Applies radiative cooling to one zone
- * 
- * @param Pr Primitives for the zone to cool
- * @param geom Geometry in the zone being cooled
- */
-void cool_nonthermal(double *Pr, struct of_geom *geom){
-    double gdot[NTEBINS], ngammas[NTEBINS];
-    double dg = log(nteGammas[1])-log(nteGammas[0]);
-
-    NTEGAMMALOOP{
-        gdot[ig] = 0;
-        ngammas[ig] = Pr[ig+NTESTART];
-    } 
-
-    calc_gdot_rad(Pr, geom, gdot);
-
-    // Upwind derivative updates each n(gamma) bin
-    NTEGAMMALOOP{
-        if(ig == NTEBINS-1){
-            Pr[ig+NTESTART] -= dt*(-gdot[ig]*ngammas[ig])/(dg*nteGammas[ig]);
-        }
-        else{
-            Pr[ig+NTESTART] -= dt*(gdot[ig+1]*ngammas[ig+1]-gdot[ig]*ngammas[ig])/(dg*nteGammas[ig]);
-        }
-
-        if (Pr[ig+NTESTART] < SMALL){
-            Pr[ig+NTESTART] = 0;
+        currgamma = nteGammas[ig];
+        if((currgamma>=gammainjmin)&&(currgamma<=gammainjmin)){
+            normterms[ig] = ME*(currgamma-1)*pow(currgamma,-PLAW);
         }
     }
+
+    normterm = gamma_integral(normterms);
 }
 
 /**
@@ -300,18 +322,13 @@ void cool_nonthermal(double *Pr, struct of_geom *geom){
  * 
  * @param Pr 
  */
-void inject_nonthermal(double *Pr, double powerlaw, double normalization){
-    // TODO: Add parameters passed at compile time for maximum and minimum injection gammas, C and p
-    // TODO: This currently only handles constant, user defined injection but this should definitely change...
-
-    double gammainjmax = 1e5;
-    double gammainjmin = 500;
+void inject_nonthermal(double *Pr, double normalization, double Dt){
     double gammatemp;
 
     NTEGAMMALOOP{
         gammatemp = nteGammas[ig];
         if((gammatemp <= gammainjmax) && (gammatemp >= gammainjmin)){
-            Pr[ig + NTESTART] += dt*normalization*pow(gammatemp,powerlaw);
+            Pr[ig + NTESTART] += Dt*normalization*pow(gammatemp,-PLAW);
         }
     } 
 }
@@ -400,11 +417,45 @@ double calc_bsq_cgs(double *Pr, struct of_geom *geom){
     return dot(Bcon,Bcov);
 }
 
-// void viscous_heating(){
-//     // Need to find: u_ith  u_eth  u_nteth
-//     double Tp = 
+void heat_electrons_zone_nonthermal(int i, int j, int k, double Pi[NVAR], double Ps[NVAR], double Pf[NVAR], double Dt){
+    double ktotharm, ktotadv, fel, felth, felnth;
+    #ifdef FELNTH
+    felnth = FELNTH;
+    #else
+    felnth = 0.015; // This was the default value from Chael
+    #endif
 
-// }
+    struct of_geom *geom = &ggeom[i][j][CENT];
+    struct of_state qf;
+    get_state(Pf, geom, &qf);
 
+    // Calculated and advected entropy at final time
+    ktotharm = (gam-1.)*Pf[UU]/pow(Pf[RHO],gam);
+    ktotadv = Pf[KTOT];
+
+    // Electron heating fraction
+    fel = get_fel(i, j, k, Ps);
+    felth = fel*(1-felnth);
+
+    // Update thermal electron entropy according to Ressler+ 2015 Eqn. 27:
+    Pf[KEL] += (game-1.)/(gam-1.)*pow(Ps[RHO],gam-game)*felth*(ktotharm-ktotadv);
+    // Update nonthermal electron entropy according to Chael 2017 Eqn. 30:
+    double Qtot = (pow(Ps[RHO],gam-1)/(gam-1)) * (Pf[RHO]*(qf.ucon[0])*(ktotharm-ktotadv)/Dt);
+    nonthermal_norm = felnth*fel*Qtot/normterm; // normterm is set in set_nonthermal_gammas and is = m_e*int(gam-1)*gam^-p
+    inject_nonthermal(Pf, nonthermal_norm, Dt);
+
+    // Diagnostics
+    struct of_state q;
+    get_state(Ps, geom, &q);
+    double uadv = ktotadv/(gam-1.)*pow(Pf[RHO],gam);
+    double Qud = q.ucon[0]*q.ucov[0]*(Pf[UU] - uadv)*pow(Ps[RHO]/Pf[RHO],gam)/Dt;
+    // du_e / dtau
+    Qvisc_e[i][j][k] = fel*Qud/q.ucov[0];
+    // du_p / dtau
+    Qvisc_p[i][j][k] = (1-fel)*Qud/q.ucov[0];
+
+    // Reset total entropy
+    Pf[KTOT] = ktotharm;
+}
 
 #endif

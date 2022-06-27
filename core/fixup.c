@@ -154,6 +154,13 @@ void fixup1zone(int i, int j, int k, double pv[NVAR])
   pv[KTOT] = (gam - 1.)*pv[UU]/pow(pv[RHO],gam);
   #endif // ELECTRONS
 
+  #if NONTHERMAL
+  // Apply absolute floor (default 0)
+  NTELOOP{
+    if (pv[ip] <= 0) pv[ip] = 0;
+  } 
+  #endif
+
   // Limit gamma with respect to normal observer
   if (mhd_gamma_calc(pv, geom, &gamma)) {
     pflag[i][j][k] = -333;

@@ -73,6 +73,9 @@
 #ifndef NTGAMMAMAX
 #define NTGAMMAMAX (500000.)
 #endif
+#ifndef PLAW
+#define PLAW (3.5)
+#endif
 #endif
 
 // Maximum fractional increase in timestep per timestep
@@ -337,6 +340,12 @@ extern int nthreads;
 #if ELECTRONS
 extern double game, gamp;
 extern double fel0;
+#endif
+
+// Nonthermal
+#if NONTHERMAL
+extern double normterm, nonthermal_norm;
+extern double gammainjmax, gammainjmin;
 #endif
 
 // Set global variables that indicate current local metric, etc.
@@ -614,16 +623,18 @@ int mpi_is_periodic(int dir);
 
 // nonthermal.c
 #if NONTHERMAL
-void step_nonthermal(grid_prim_type Pr);
-void nonthermal_adiab(int i, int j, int k, grid_prim_type Pr);
-void nonthermal_adiab_upwind(double adiab, double *ngamma, double *nprime);
+void nonthermal_adiab(grid_prim_type Pi, grid_prim_type Pf, double Dt);
+void cool_nonthermal(grid_prim_type Pi, grid_prim_type Pf, double Dt);
+void cool_nonthermal_zone(double *Pi, double *Pf, struct of_geom *geom, double Dt);
+void nonthermal_adiab_zone(int i, int j, int k, grid_prim_type Pi, grid_prim_type Pf, double Dt);
 double gamma_integral(double *ureal);
-double calc_expansion(int i, int j, int k, grid_prim_type Pr);
+void nonthermal_adiab_upwind(double adiab, double *ngamma, double *nprime);
+double calc_expansion(int i, int j, int k, grid_prim_type Pi, grid_prim_type Pf, double Dt);
 void set_nonthermal_gammas();
-void cool_nonthermal(double *Pr, struct of_geom *geom);
-void inject_nonthermal(double *Pr, double powerlaw, double normalization);
+void inject_nonthermal(double *Pr, double normalization, double Dt);
 void calc_gdot_rad(double *Pr, struct of_geom *geom, double *gdot);
 double calc_bsq_cgs(double *Pr, struct of_geom *geom);
+void heat_electrons_zone_nonthermal(int i, int j, int k, double Pi[NVAR], double Ps[NVAR], double Pf[NVAR], double Dt);
 #endif
 
 // phys.c

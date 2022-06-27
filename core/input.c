@@ -129,6 +129,11 @@ void set_core_params()
   set_param("tptemax", &tptemax);
   #endif
 
+  #if NONTHERMAL
+  set_param("gammainjmin", &gammainjmin);
+  set_param("gammainjmax", &gammainjmax);
+  #endif
+
   #if RADIATION
   #if !ELECTRONS
   set_param("tp_over_te", &tp_over_te);

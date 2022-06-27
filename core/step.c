@@ -32,8 +32,14 @@ void step()
 
   // Predictor step - advance half a timestep
   ndt = advance(P, P, 0.5*dt, Ph, 0);
+  #if NONTHERMAL
+  nonthermal_adiab(P, Ph, 0.5*dt);
+  #endif
   #if ELECTRONS
   heat_electrons(P, P, Ph, 0.5*dt);
+  #endif
+  #if NONTHERMAL
+  cool_nonthermal(P, Ph, 0.5*dt);
   #endif
   fixup(Ph);
   fixup_utoprim(Ph);
@@ -56,8 +62,14 @@ void step()
 
   // Corrector step
   ndt = advance(P, Ph, dt, P, 1);
+  #if NONTHERMAL
+  nonthermal_adiab(Psave, P, dt);
+  #endif
   #if ELECTRONS
   heat_electrons(P, Ph, P, dt);
+  #endif
+  #if NONTHERMAL
+  cool_nonthermal(P, P, dt);
   #endif
   fixup(P);
   fixup_utoprim(P);
@@ -85,10 +97,6 @@ void step()
   memset((void*)&radG[0][0][0][0], 0,
     (N1+2*NG)*(N2+2*NG)*(N3+2*NG)*NDIM*sizeof(double));
   #endif // RADIATION
-
-  #if NONTHERMAL
-  step_nonthermal(P);
-  #endif
 
   // Increment time
   t += dt;

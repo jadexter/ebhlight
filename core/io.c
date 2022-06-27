@@ -667,6 +667,10 @@ void dump()
   WRITE_HDR(tptemax, TYPE_DBL);
   WRITE_HDR(fel0, TYPE_DBL);
   #endif
+  #if NONTHERMAL
+  double gamma_inj_min = gammainjmin; WRITE_HDR(gamma_inj_min, TYPE_DBL);
+  double gamma_inj_max = gammainjmax; WRITE_HDR(gamma_inj_max, TYPE_DBL);
+  #endif
   #if RADIATION
   WRITE_HDR(tp_over_te, TYPE_DBL);
   WRITE_HDR(Mbh, TYPE_DBL);
@@ -977,6 +981,11 @@ void restart_write(int restart_type)
     WRITE_HDR(tptemax, TYPE_DBL);
   #endif // ELECTRONS
 
+  #if NONTHERMAL
+  WRITE_HDR(gammainjmin, TYPE_DBL);
+  WRITE_HDR(gammainjmax, TYPE_DBL);
+  #endif
+
   #if RADIATION
     WRITE_HDR(numin_emiss, TYPE_DBL);
     WRITE_HDR(numax_emiss, TYPE_DBL);
@@ -1197,6 +1206,11 @@ void restart_read(char *fname)
     READ_HDR(tptemin, TYPE_DBL);
     READ_HDR(tptemax, TYPE_DBL);
   #endif // ELECTRONS
+
+  #if NONTHERMAL
+    READ_HDR(gammainjmin, TYPE_DBL);
+    READ_HDR(gammainjmax, TYPE_DBL);
+  #endif
 
   #if RADIATION
     READ_HDR(numin_emiss, TYPE_DBL);

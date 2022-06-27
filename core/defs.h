@@ -138,6 +138,12 @@ double game, gamp;
 double fel0;
 #endif
 
+// Nonthermal
+#if NONTHERMAL
+double normterm, nonthermal_norm;
+double gammainjmax, gammainjmin;
+#endif
+
 // MPI-specific stuff
 int global_start[NDIM];
 int global_stop[NDIM];
