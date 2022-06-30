@@ -25,6 +25,10 @@ void step()
 
   // Need both P_n and P_n+1 to calculate current
   ZSLOOP(-NG,N1-1+NG,-NG,N2-1+NG,-NG,N3-1+NG) {
+    #ifdef CONST_INJECTION
+      inject_nonthermal(P[i][j][k], 1e5, dt);
+    #endif
+    
     PLOOP {
       Psave[i][j][k][ip] = P[i][j][k][ip];
     }
@@ -32,13 +36,13 @@ void step()
 
   // Predictor step - advance half a timestep
   ndt = advance(P, P, 0.5*dt, Ph, 0);
-  #if NONTHERMAL
+  #if NONTHERMAL && !defined(SKIP_ADIAB)
   nonthermal_adiab(P, Ph, 0.5*dt);
   #endif
   #if ELECTRONS
   heat_electrons(P, P, Ph, 0.5*dt);
   #endif
-  #if NONTHERMAL
+  #if NONTHERMAL && !defined(SKIP_COOLING)
   cool_nonthermal(P, Ph, 0.5*dt);
   #endif
   fixup(Ph);
@@ -62,13 +66,13 @@ void step()
 
   // Corrector step
   ndt = advance(P, Ph, dt, P, 1);
-  #if NONTHERMAL
+  #if NONTHERMAL && !defined(SKIP_ADIAB)
   nonthermal_adiab(Psave, P, dt);
   #endif
   #if ELECTRONS
   heat_electrons(P, Ph, P, dt);
   #endif
-  #if NONTHERMAL
+  #if NONTHERMAL && !defined(SKIP_COOLING)
   cool_nonthermal(P, P, dt);
   #endif
   fixup(P);

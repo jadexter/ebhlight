@@ -141,7 +141,7 @@ double fel0;
 // Nonthermal
 #if NONTHERMAL
 double normterm, nonthermal_norm;
-double gammainjmax, gammainjmin;
+double gammainjmax, gammainjmin; // defaults to 5e2 and 1e5
 #endif
 
 // MPI-specific stuff

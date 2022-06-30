@@ -43,7 +43,7 @@ void heat_electrons(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf,
   double Dt)
 {
   timer_start(TIMER_ELECTRON);
-  #if NONTHERMAL
+  #if NONTHERMAL && !defined(SKIP_VISCOUS)
     #pragma omp parallel for collapse(3) schedule(dynamic)
     ZLOOP {
       heat_electrons_zone_nonthermal(i, j, k, Pi[i][j][k], Ps[i][j][k], Pf[i][j][k], Dt);

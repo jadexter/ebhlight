@@ -1,8 +1,8 @@
 /******************************************************************************
  *                                                                            *
- * RADIATION.C                                                                *
+ * NONTHERMAL.C                                                               *
  *                                                                            *
- * MODEL-INDEPENDENT RADIATION QUANTITIES                                     *
+ * Quantities and functions for nonthermal electron evolution                 *
  *                                                                            *
  ******************************************************************************/
 

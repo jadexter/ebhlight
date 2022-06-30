@@ -345,7 +345,7 @@ extern double fel0;
 // Nonthermal
 #if NONTHERMAL
 extern double normterm, nonthermal_norm;
-extern double gammainjmax, gammainjmin;
+extern double gammainjmax, gammainjmin; // defaults to 5e2 and 1e5
 #endif
 
 // Set global variables that indicate current local metric, etc.
