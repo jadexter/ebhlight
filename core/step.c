@@ -157,7 +157,7 @@ double advance(grid_prim_type Pi, grid_prim_type Pb, double Dt,
     pflag[i][j][k] = Utoprim(U, &(ggeom[i][j][CENT]), Pf[i][j][k]);
     if(pflag[i][j][k])
       fail_save[i][j][k] = 1;
-      fprintf(stderr,"[%i][istart=%i][%i %i %i] pflag = %g\n",
+      fprintf(stderr,"[%i][istart=%i][%i %i %i] pflag = %i\n",
               mpi_myrank(), global_start[1], i, j, k, pflag[i][j][k]);
   } // ZLOOP
   timer_stop(TIMER_UPDATE);
