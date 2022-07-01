@@ -17,7 +17,7 @@
 #PBS -q devel
 #PBS -m e
 
-setenv OMP_NUM_THREADS 80
+setenv OMP_NUM_THREADS 4
 setenv MPI_DSM_DISTRIBUTE 0
 setenv KMP_AFFINITY disabled
 setenv MPI_TYPE_DEPTH 32
@@ -37,7 +37,7 @@ module load szip
 # PBS_O_WORKDIR to change to the directory where
 # you submitted your job.
 
-cd /nobackup/ahankla/ebhlight_ecool/prob/torus_ecool_template
+cd $PBS_O_WORKDIR
 export MPI_LAUNCH_TIMEOUT=40
 
 # use of dplace to pin processes to processors may improve performance

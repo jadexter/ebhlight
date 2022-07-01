@@ -5,11 +5,11 @@ PROB = 'torus'
                          ### COMPILE TIME PARAMETERS ###
 
 # SPATIAL RESOLUTION AND MPI DECOMPOSITION
-bhl.config.set_cparm('N1TOT', 256)
+bhl.config.set_cparm('N1TOT', 320)
 bhl.config.set_cparm('N2TOT', 256)
 bhl.config.set_cparm('N3TOT', 1)
-bhl.config.set_cparm('N1CPU', 1) # Match these to job scripts
-bhl.config.set_cparm('N2CPU', 1)
+bhl.config.set_cparm('N1CPU', 10) # Match these to job scripts
+bhl.config.set_cparm('N2CPU', 8)
 bhl.config.set_cparm('N3CPU', 1)
 
 # OPENMP PARALLELIZATION
@@ -71,7 +71,7 @@ bhl.config.set_rparm('tcool0', 'double', default=1.0) # Only used if TCOOL is 0;
 bhl.config.set_rparm('tcoolOmega0', 'double', default=1.0) # Only used if TCOOL is 1; fixes tcool=1/(Omega*tcoolOmega0)
 bhl.config.set_rparm('q_constant', 'double', default=0.5) # Only used if TCOOL is 1; Noble+ uses 0.5, Nico uses 1.
 # Standard run-time parameters
-bhl.config.set_rparm('tf', 'double', default = 3001.0) # Simulation end time
+bhl.config.set_rparm('tf', 'double', default = 2501.0) # Simulation end time
 bhl.config.set_rparm('dt', 'double', default = 1.e-6)
 bhl.config.set_rparm('Rout', 'double', default = 1000.) # Outer extent of simulation domain
 bhl.config.set_rparm('Rout_rad', 'double', default = 40.) # only if RADIATION
