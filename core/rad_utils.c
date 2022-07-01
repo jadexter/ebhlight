@@ -39,16 +39,19 @@ void set_ISCOquantities()
   double gcov[NDIM][NDIM];
   bl_gcov_func(Risco, thetaMidplane, gcov);
   // The four-velocity at the ISCO is purely circular, so
-  // u^\mu = K^\mu = (u^t, 0, 0, u^\phi). u^t = gamma
-  // u^\phi = gamma*Omega0
+  // u^\mu = K^\mu = (u^t, 0, 0, u^\phi). u^t = A = gamma/alpha
+  // u^\phi = gamma/alpha*Omega0
+  // Note that u^t is NOT the Lorentz factor gamma, since
+  // gamma = dtau/dtau0 where tau0 is proper time in the fluid frame.
+  // alpha here is the lapse function
   double Omega0 = 1.0/(pow(Risco, 3./2.) + a); // Omega at the ISCO
-  double gamma_denom = gcov[0][0]
+  double ga_denom = gcov[0][0]
   + 2.0*gcov[0][3]*Omega0
   + gcov[3][3]*Omega0*Omega0;
-  double gamma = pow(-1./gamma_denom, 1./2.); // Lorentz factor at ISCO
-  fprintf(stdout, "ISCO orbital values: gamma=%f, Omega0=%f\n", gamma, Omega0);
+  double gamma_alpha = pow(-1./ga_denom, 1./2.);
+  fprintf(stdout, "ISCO orbital values: gamma/alpha=%f, Omega0=%f\n", gamma_alpha, Omega0);
   double KMu[4]; // K^\mu (contravariant)
-  KMu[0] = gamma; KMu[3] = gamma*Omega0;
+  KMu[0] = gamma_alpha; KMu[3] = gamma_alpha*Omega0;
   KMu[1] = 0.; KMu[2] = 0.;
   lower(KMu, gcov, Kmu);
 }

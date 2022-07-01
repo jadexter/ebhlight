@@ -341,7 +341,10 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   }
   // check for supercooling
   if ((uel < dt*L)) {
-    fprintf(stdout, "supercooling! Adjusting tcool to prevent. Y, uel, L: %g %g %g \n", Y, uel, L);
+    fprintf(stderr,"[%i][istart=%i][%i %i %i] supercooling! Y, uel, L: %g %g %g\n",
+            mpi_myrank(), global_start[1], i, j, k, Y, uel, L);
+    fprintf(stderr, "coords: %g %g %g %g \n",X[0],X[1],r,th);
+    // fprintf(stdout, "supercooling! Adjusting tcool to prevent. Y, uel, L: %g %g %g \n", Y, uel, L);
     L = uel/dt - SMALL;
   }
   // AMH added output of L
