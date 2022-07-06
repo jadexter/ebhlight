@@ -61,8 +61,13 @@ void cool_nonthermal_zone(double *Pi, double *Pf, struct of_geom *geom, double D
     }
 
     // Update thermal electrons with cooling nonthermal electrons
-    double qcool = -ME*gdot[0]*(nteGammas[0]-1)*ngammas[0];
-    qcool += 1; // remove later (just to avoid unused warning)
+    double ncool = -gdot[0]*ngammas[0];
+    double qcool = ME*(nteGammas[0]-1)*ncool;
+    double chempot = calc_potential(Pf);
+    struct of_state q;
+
+    get_state(Pf, geom, &q);
+    apply_thermal_heating(Pf, q, qcool-chempot*ncool,Dt);
 }
 
 /**
@@ -135,6 +140,23 @@ void nonthermal_adiab_zone(int i, int j, int k, grid_prim_type Pi, grid_prim_typ
         }
     }
     
+    // Catch energy coming out of the nonthermal electrons
+
+    double ncool, qcool;
+    // Expanding
+    if(adiab > 0){
+        ncool = -deltan[0];
+        qcool = deltan*ME*(nteGammas[0]-1);
+    }
+    // Compressing, small amount can escape out the top
+    else{
+        ncool = -deltan[NTEBINS-1];
+        qcool = ncool*ME*(nteGammas[NTEBINS-1]-1);
+    }
+
+    double chempot = calc_potential(Pf[i][j][k]);
+    apply_thermal_heating(Pf[i][j][k], q, qcool-chempot*ncool,Dt);
+
 }
 
 /**
@@ -456,6 +478,24 @@ void heat_electrons_zone_nonthermal(int i, int j, int k, double Pi[NVAR], double
 
     // Reset total entropy
     Pf[KTOT] = ktotharm;
+}
+
+void apply_thermal_heating(double *Pr, struct of_state q, double heat, double Dt){
+    // Update electron internal energy
+    double ue_f = Pr[KEL]*pow(Pr[RHO],game)/(game-1.);
+    ue_f += heat*Dt/q.ucon[0];
+
+    // Update electron entropy
+    Pf[KEL] = (game-1.)*ue_f*pow(Pr[RHO],-game);
+}
+
+double calc_potential(double *Pr){
+    //From coulomb
+    double rho = Pr[RHO];
+    double thetae = MP/ME*Pr[KEL]*pow(rho,game-1.);
+    double n = rho*Ne_unit;
+
+    return ME * (1. - 0.6*log1p(2.5*thetae) + thetae*(4-1.5*log(thetae*(thetae+0.4)) + log(n)));
 }
 
 #endif

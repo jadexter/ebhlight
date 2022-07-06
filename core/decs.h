@@ -635,6 +635,8 @@ void inject_nonthermal(double *Pr, double normalization, double Dt);
 void calc_gdot_rad(double *Pr, struct of_geom *geom, double *gdot);
 double calc_bsq_cgs(double *Pr, struct of_geom *geom);
 void heat_electrons_zone_nonthermal(int i, int j, int k, double Pi[NVAR], double Ps[NVAR], double Pf[NVAR], double Dt);
+double calc_potential(double *Pr);
+void apply_thermal_heating(double *Pr, struct of_state q, double heat, double Dt);
 #endif
 
 // phys.c
