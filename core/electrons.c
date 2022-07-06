@@ -393,6 +393,27 @@ double get_tcool(int i, double r){
   tcool = 1.0/(Omega*tcoolOmega0);
   return tcool;
   #endif
+
+  #if TCOOL == 2
+  // Set tcool = A(r-rEH)^p + B
+  double p = 1.5; // chosen to imitate 1/Omega dependence
+  double B = 1.0; // arbitrarily chosen value of tcool at event horizon
+  double Omega0 = 1.0/(pow(Risco, 3./2.) + a); // Omega at the ISCO
+  double A = (1.0/Omega0 - B)/(pow(Risco - Reh, p));
+  double tcool = A*pow(r - Reh, p) + B;
+  // if ( r > Risco){
+  return tcool;
+  #endif
+  #if TCOOL == 3
+  // Set tcool = A(r^p-rEH^p) + B
+  double p = 1.5; // chosen to imitate 1/Omega dependence
+  double B = 1.0; // arbitrarily chosen value of tcool at event horizon
+  double Omega0 = 1.0/(pow(Risco, 3./2.) + a); // Omega at the ISCO
+  double A = (1.0/Omega0 - B)/(pow(Risco, p) - pow(Reh, p));
+  double tcool = A*(pow(r, p) - pow(Reh, p)) + B;
+  // if ( r > Risco){
+  return tcool;
+#endif
 }
 #endif // COOLING
 
