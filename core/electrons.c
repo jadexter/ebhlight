@@ -332,7 +332,8 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   L = 0.;
   //limit Y for now and don't cool sigma > 1
   Y = MY_MIN(Y, 1000.);
-  if ((!isnan(Tel)) && (Y > 0.) && (uel > 0.) && (Tel > 0.) && (sigma < 1.)) {
+  // if ((!isnan(Tel)) && (Y > 0.) && (uel > 0.) && (Tel > 0.) && (sigma < 1.)) {
+  if ((!isnan(Tel)) && (Y > 0.) && (uel > 0.) && (Tel > 0.)) {
     // this should cool the *electrons* e.g. cooling rate set by their uel not UU
     L = 2.*uel*pow(Y, q_constant)/tcool;
   }
