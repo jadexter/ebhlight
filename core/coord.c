@@ -25,7 +25,7 @@
 void coord(int i, int j, int k, int loc, double *X)
 {
   X[0] = t;
-	
+
   i += global_start[1];
   j += global_start[2];
   k += global_start[3];
@@ -53,6 +53,9 @@ void coord(int i, int j, int k, int loc, double *X)
     fprintf(stderr, "Invalid coordinate location!\n");
     exit(1);
   }
+//  if (X[1] < 1e-10) {
+//    fprintf(stdout, "in coord: %i %i %i %i %g %g", i, j, k, NG, X[0], X[1]);
+//}
 }
 
 // Assumes Boyer-Lindquist coordinates
@@ -63,16 +66,18 @@ int bl_i_of_r(double r)
   return ind;
 }
 
+// Wong, Prather, + 2022 Eq. F1
 double thG_of_X(const double X[NDIM])
 {
   return M_PI*X[2] + ((1. - hslope)/2.)*sin(2.*M_PI*X[2]);
 }
 
+// Wong, Prather, + 2022 Eq. F2
 #if METRIC == MMKS
 void thJ_of_X(const double X[NDIM], double *y, double* thJ)
 {
   *y = 2*X[2] - 1.;
-  *thJ = poly_norm*(*y)*(1. + pow((*y)/poly_xt,poly_alpha)/(poly_alpha+1.)) + 
+  *thJ = poly_norm*(*y)*(1. + pow((*y)/poly_xt,poly_alpha)/(poly_alpha+1.)) +
     0.5*M_PI;
 }
 #endif
@@ -85,10 +90,11 @@ double r_of_X(const double X[NDIM])
 double th_of_X(const double X[NDIM])
 {
   double thG = thG_of_X(X);
-  
+
   #if METRIC == MMKS
   double y, thJ;
   thJ_of_X(X, &y, &thJ);
+  // mks_smooth defaults to 0.5, set in param_template somehow
   return thG + exp(mks_smooth*(startx[1] - X[1]))*(thJ - thG);
   #else
   return thG;
@@ -186,7 +192,7 @@ void jac_harm_to_bl(const double X[NDIM],
   Jcon[0][0] = 1.;     // t
   Jcon[1][1] = drdX1;  // r
   Jcon[2][1] = dthdX1; // th
-  Jcon[2][2] = dthdX2; 
+  Jcon[2][2] = dthdX2;
   Jcon[3][3] = 1.;     // phi
   // Jcov
   Jcov[0][0] = 1.;                             // t
@@ -245,7 +251,7 @@ void jac_harm_to_cart(const double X[NDIM], double Jcov[NDIM][NDIM], double Jcon
     double J_bl2c_cov[NDIM][NDIM], J_bl2c_con[NDIM][NDIM];
     jac_harm_to_bl(X, J_h2bl_cov, J_h2bl_con);
     jac_bl_to_cart(X, J_bl2c_cov, J_bl2c_con);
-    
+
     for (int mupp = 0; mupp < NDIM; mupp++) {
       for (int mu = 0; mu < NDIM; mu++) {
         Jcon[mupp][mu] = 0.0;
@@ -280,16 +286,16 @@ void set_dxdX(double X[NDIM], double dxdX[NDIM][NDIM])
   dxdX[0][0] = 1.;
   dxdX[1][1] = exp(X[1]);
   dxdX[2][1] = -exp(mks_smooth*(startx[1]-X[1]))*mks_smooth*(
-    M_PI/2. - 
-    M_PI*X[2] + 
-    poly_norm*(2.*X[2]-1.)*(1+(pow((-1.+2*X[2])/poly_xt,poly_alpha))/(1 + poly_alpha)) - 
+    M_PI/2. -
+    M_PI*X[2] +
+    poly_norm*(2.*X[2]-1.)*(1+(pow((-1.+2*X[2])/poly_xt,poly_alpha))/(1 + poly_alpha)) -
     1./2.*(1. - hslope)*sin(2.*M_PI*X[2])
     );
-  dxdX[2][2] = M_PI + (1. - hslope)*M_PI*cos(2.*M_PI*X[2]) + 
+  dxdX[2][2] = M_PI + (1. - hslope)*M_PI*cos(2.*M_PI*X[2]) +
     exp(mks_smooth*(startx[1]-X[1]))*(
-      -M_PI + 
-      2.*poly_norm*(1. + pow((2.*X[2]-1.)/poly_xt,poly_alpha)/(poly_alpha+1.)) + 
-      (2.*poly_alpha*poly_norm*(2.*X[2]-1.)*pow((2.*X[2]-1.)/poly_xt,poly_alpha-1.))/((1.+poly_alpha)*poly_xt) - 
+      -M_PI +
+      2.*poly_norm*(1. + pow((2.*X[2]-1.)/poly_xt,poly_alpha)/(poly_alpha+1.)) +
+      (2.*poly_alpha*poly_norm*(2.*X[2]-1.)*pow((2.*X[2]-1.)/poly_xt,poly_alpha-1.))/((1.+poly_alpha)*poly_xt) -
       (1.-hslope)*M_PI*cos(2.*M_PI*X[2])
       );
   dxdX[3][3] = 1.;
@@ -369,7 +375,7 @@ void set_points()
   stopx_rad[2] = startx_rad[2] + N2TOT*dx[2];
   stopx_rad[3] = startx_rad[3] + N3TOT*dx[3];
   #endif
-  #elif METRIC == MKS || METRIC == MMKS 
+  #elif METRIC == MKS || METRIC == MMKS
   // Set Rin such that we have 5 zones completely inside the event horizon
   Reh = 1. + sqrt(1. - a*a);
   double z1 = 1 + pow(1 - a*a, 1./3.)*(pow(1 + a, 1./3.) + pow(1 - a, 1./3.));
@@ -408,7 +414,7 @@ void set_points()
   #if METRIC == MMKS
     poly_norm = 0.5*M_PI*1./(1. + 1./(poly_alpha + 1.)*
                            1./pow(poly_xt, poly_alpha));
-  #endif 
+  #endif
   #endif // MKS
 
   startx_proc[1] = startx[1] + global_start[1]*dx[1];
@@ -433,9 +439,9 @@ void set_grid()
 
   for (int mu = 0; mu < NDIM; mu++) X[mu] = 0.;
 
-  #if RADIATION
+  #if RADIATION || COOLING
   dt_light_min = 1./SMALL;
-  #endif 
+  #endif
 
   ISLOOP(-NG, N1 - 1 + NG) {
     JSLOOP(-NG, N2 - 1 + NG) {
@@ -446,15 +452,15 @@ void set_grid()
           ggeom[i][j][loc].gcon);
         ggeom[i][j][loc].alpha = 1.0 / sqrt(-ggeom[i][j][loc].gcon[0][0]);
       }
-       
+
       // Only required in zone center
       conn_func(X, &ggeom[i][j][CENT], conn[i][j]);
-      
-      #if RADIATION
+
+      #if RADIATION || COOLING
       // Set minimum light crossing time for each zone
       dt_light[i][j] = 1.e30;
       double light_phase_speed = SMALL;
-      double dt_light_local = 0.; 
+      double dt_light_local = 0.;
 
       for (int mu = 1; mu < NDIM; mu++) {
         if(pow(ggeom[i][j][CENT].gcon[0][mu], 2.) -
@@ -480,7 +486,7 @@ void set_grid()
       }
       dt_light_local = 1./dt_light_local;
       if (dt_light_local < dt_light_min) dt_light_min = dt_light_local;
-      #endif // RADIATION
+      #endif //COOLING or RADIATION
     } // JSLOOP
   } // ISLOOP
 
@@ -503,4 +509,3 @@ void zero_arrays()
     fail_save[i][j][k] = 0;
   } // ZSLOOP
 }
-

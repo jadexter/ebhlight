@@ -14,34 +14,24 @@
 #                                                                              #
 ################################################################################
 
-import util
-import sys
 import os
 
-# module load gcc/4.9.3
-# module load openmpi/1.10.0-gcc_4.9.3
-
-# gsl must be installed by hand to
-# ~/local/gcc/gsl
-
-# hdf5-parallel must be installed by hand to
-# ~/local/gcc/hdf5-parallel
-
-flags_base = '-Xpreprocessor -fopenmp -I/usr/local/opt/llvm/include -I/usr/local/include -L/usr/local/lib -L/usr/local/opt/llvm/lib -lomp '
+# module load phdf5
+# module load gsl
 
 def matches_host():
   host = os.uname()[1]
-  return 'Jason' in host
+  return 'pfe' in host
 
 def get_options():
   host = {}
 
-#  local_root = os.path.join(os.environ['HOME'],'local','gcc')
   host['NAME']           = os.uname()[1]
   host['COMPILER']       = 'h5pcc'
-  host['COMPILER_FLAGS'] = flags_base + ' ' + '-O3 -march=native'
-  host['DEBUG_FLAGS']    = flags_base + ' ' + '-g -O0'
-  host['GSL_DIR']        = '/usr/local/'
-  host['EXECUTABLE']     = 'mpirun'
+  host['COMPILER_FLAGS'] = '-O3 -fPIC -Wall -Werror -qopenmp -march=core-avx2'
+  host['DEBUG_FLAGS']    = '-O0 -g -fPIC -Wall -Werror -qopenmp'
+  host['HDF5_DIR']       = '/nasa/hdf5/1.8.18_mpt/'
+  host['GSL_DIR']        = '/home4/ahankla/gsl/'
+  host['EXECUTABLE']     = 'mpiexec'
 
   return host

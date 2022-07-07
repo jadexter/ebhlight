@@ -1,0 +1,56 @@
+#PBS -S /bin/csh
+#PBS -N testT1e9
+# This example uses the Sandy Bridge nodes
+# User job can access ~31 GB of memory per Sandy Bridge node.
+# A memory intensive job that needs more than ~1.9 GB
+# per process should use less than 16 cores per node
+# to allow more memory per MPI process. This example
+# asks for 32 nodes and 8 MPI processes per node.
+# This request implies 32x8 = 256 MPI processes for the job.
+
+#PBS -l select=1:ncpus=40:mpiprocs=1:model=sky_ele
+#PBS -l site=needed/nobackupp17
+#PBS -l walltime=02:00:00
+#PBS -W group_list=s2567
+#PBS -j oe
+#PBS -q devel
+#PBS -m e
+
+setenv OMP_NUM_THREADS 4
+setenv MPI_DSM_DISTRIBUTE 0
+setenv KMP_AFFINITY disabled
+setenv MPI_TYPE_DEPTH 32
+
+# Load a compiler you use to build your executable
+
+module load comp-intel/2018.3.222
+
+# Load the NAS Recommended version of the SGI MPT Library.
+
+module load mpi-hpe
+module load hdf5/1.8.18_mpt
+module load szip
+
+# By default, PBS executes your job from your home directory.
+# However, you can use the environment variable
+# PBS_O_WORKDIR to change to the directory where
+# you submitted your job.
+
+cd $PBS_O_WORKDIR
+export MPI_LAUNCH_TIMEOUT=40
+
+# use of dplace to pin processes to processors may improve performance
+# Here you request to pin processes to processors 4-11 of each Sandy Bridge node.
+# For other processor types, you may have to pin to different processors.
+
+# The resource request of select=32 and mpiprocs=8 implies
+# that you want to have 256 MPI processes in total.
+# If this is correct, you can omit the -np 256 for mpiexec
+# that you might have used before.
+
+mpiexec -np 1 /u/scicon/tools/bin/mbind.x ./bhlight -p param_template.dat >& output_cool
+
+# It is a good practice to write stderr and stdout to a file (ex: output)
+# Otherwise, they will be written to the PBS stderr and stdout in /PBS/spool,
+# which has limited amount  of space. When /PBS/spool is filled up, any job
+# that tries to write to /PBS/spool will die.

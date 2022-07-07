@@ -8,6 +8,56 @@
 
 #include "decs.h"
 
+#if RADIATION || COOLING
+void set_units()
+{
+  #if METRIC == MKS || METRIC == MMKS
+  L_unit = GNEWT*Mbh/(CL*CL); // rg. Overwrites input.
+  #endif
+  T_unit = L_unit/CL;
+  RHO_unit = M_unit*pow(L_unit,-3.);
+  U_unit = RHO_unit*CL*CL;
+  B_unit = CL*sqrt(4.*M_PI*RHO_unit);
+  Ne_unit = RHO_unit/(MP + ME);
+
+  #if ELECTRONS
+  Thetae_unit = MP/ME;
+  #else
+  Thetae_unit = (gam-1.)*MP/ME/(1. + tp_over_te);
+  #endif
+  #if RADIATION
+  kphys_to_num = ME/M_unit;
+  #endif
+}
+#endif
+
+#if COOLING && (TCOOL == 1)
+#if METRIC == MKS || METRIC == MMKS
+void set_ISCOquantities()
+{
+  double thetaMidplane = M_PI/2.0;
+  double gcov[NDIM][NDIM];
+  bl_gcov_func(Risco, thetaMidplane, gcov);
+  // The four-velocity at the ISCO is purely circular, so
+  // u^\mu = K^\mu = (u^t, 0, 0, u^\phi). u^t = A = gamma/alpha
+  // u^\phi = gamma/alpha*Omega0
+  // Note that u^t is NOT the Lorentz factor gamma, since
+  // gamma = dtau/dtau0 where tau0 is proper time in the fluid frame.
+  // alpha here is the lapse function
+  double Omega0 = 1.0/(pow(Risco, 3./2.) + a); // Omega at the ISCO
+  double ga_denom = gcov[0][0]
+  + 2.0*gcov[0][3]*Omega0
+  + gcov[3][3]*Omega0*Omega0;
+  double gamma_alpha = pow(-1./ga_denom, 1./2.);
+  fprintf(stdout, "ISCO orbital values: gamma/alpha=%f, Omega0=%f\n", gamma_alpha, Omega0);
+  double KMu[4]; // K^\mu (contravariant)
+  KMu[0] = gamma_alpha; KMu[3] = gamma_alpha*Omega0;
+  KMu[1] = 0.; KMu[2] = 0.;
+  lower(KMu, gcov, Kmu);
+}
+#endif
+#endif
+
 #if RADIATION
 void init_rad(grid_prim_type Prad)
 {
@@ -28,7 +78,7 @@ void init_rad(grid_prim_type Prad)
 void init_superphoton_resolution()
 {
   init_make_statics();
-  
+
   made_tune_proc = abs_tune_proc = scatt_tune_proc = 0;
 
   if (tune_emiss < 0) {
@@ -158,25 +208,6 @@ double linear_interp_log(double x, double *table, double lx_min, double dlx)
   dn = dn - n;
 
   return (1. - dn)*table[n] + dn*table[n+1];
-}
-
-void set_units()
-{
-  #if METRIC == MKS || METRIC == MMKS
-  L_unit = GNEWT*Mbh/(CL*CL);
-  #endif
-  T_unit = L_unit/CL;
-  RHO_unit = M_unit*pow(L_unit,-3.);
-  U_unit = RHO_unit*CL*CL;
-  B_unit = CL*sqrt(4.*M_PI*RHO_unit);
-  Ne_unit = RHO_unit/(MP + ME);
-
-  #if ELECTRONS
-  Thetae_unit = MP/ME;
-  #else
-  Thetae_unit = (gam-1.)*MP/ME/(1. + tp_over_te);
-  #endif
-  kphys_to_num = ME/M_unit;
 }
 
 // Remove superphoton from list and release memory
@@ -345,7 +376,7 @@ int get_X_K_interp(struct of_photon *ph, double t_interp, double X[NDIM],
 
   double kdotk = dot(Kcon, Kcov);
   int status;
-  
+
   // If interpolation is terrible, we need to replace with an honest push
   // Also do this if there aren't yet three support points
   if (fabs((kdotk-KdotKprev)/(Kcov[0]*Kcov[0])) > 1e-3 || ph->X[0][0] < 0) {
@@ -356,8 +387,8 @@ int get_X_K_interp(struct of_photon *ph, double t_interp, double X[NDIM],
         Kcon[mu] = ph->Kcon[0][mu];
       }
       double KdotKprev = dot(Kcov, Kcon);
-      status = push_X_K(X, Kcov, Kcon, KdotKprev, 
-        t_interp-ph->X[0][0]); 
+      status = push_X_K(X, Kcov, Kcon, KdotKprev,
+        t_interp-ph->X[0][0]);
     } else if (ph->X[1][0] > 0) {
       for (int mu = 0; mu < NDIM; mu++) {
         X[mu] = ph->X[1][mu];
@@ -365,7 +396,7 @@ int get_X_K_interp(struct of_photon *ph, double t_interp, double X[NDIM],
         Kcon[mu] = ph->Kcon[1][mu];
       }
       double KdotKprev = dot(Kcov, Kcon);
-      status = push_X_K(X, Kcov, Kcon, KdotKprev, 
+      status = push_X_K(X, Kcov, Kcon, KdotKprev,
         t_interp-ph->X[1][0]);
     } else {
       for (int mu = 0; mu < NDIM; mu++) {
@@ -374,7 +405,7 @@ int get_X_K_interp(struct of_photon *ph, double t_interp, double X[NDIM],
         Kcon[mu] = ph->Kcon[2][mu];
       }
       double KdotKprev = dot(Kcov, Kcon);
-      status = push_X_K(X, Kcov, Kcon, KdotKprev, 
+      status = push_X_K(X, Kcov, Kcon, KdotKprev,
         t_interp-ph->X[2][0]);
     }
     if (status == PUSH_FAIL) {
@@ -390,7 +421,7 @@ int get_X_K_interp(struct of_photon *ph, double t_interp, double X[NDIM],
   return SPH_INTERP_SUCCESS;
 }
 
-int push_to_X_K(double t, struct of_photon *ph, double X[NDIM], 
+int push_to_X_K(double t, struct of_photon *ph, double X[NDIM],
   double Kcov[NDIM], double Kcon[NDIM])
 {
   int status;
@@ -401,7 +432,7 @@ int push_to_X_K(double t, struct of_photon *ph, double X[NDIM],
       Kcon[mu] = ph->Kcon[0][mu];
     }
     double KdotKprev = dot(Kcov, Kcon);
-    status = push_X_K(X, Kcov, Kcon, KdotKprev, t - ph->X[0][0]); 
+    status = push_X_K(X, Kcov, Kcon, KdotKprev, t - ph->X[0][0]);
   } else {
     for (int mu = 0; mu < NDIM; mu++) {
       X[mu] = ph->X[1][mu];
@@ -445,7 +476,7 @@ void swap_ph(struct of_photon **donor, struct of_photon **recipient)
 }
 
 // These atomic calls can be very slow on certain problems
-void set_Rmunu() 
+void set_Rmunu()
 {
   memset((void*)Rmunu, 0,
     (N1+2*NG)*(N2+2*NG)*(N3+2*NG)*NDIM*NDIM*sizeof(double));
@@ -480,22 +511,17 @@ void set_Rmunu()
 	} // omp parallel
 }
 
-double get_nuLnu_bin(double X[NDIM], int *thbin, int *phibin)
+void get_nuLnu_bin(double X[NDIM], int *thbin, int *phibin)
 {
   double r, th, phi;
-  bl_coord(X, &r, &th); 
+  bl_coord(X, &r, &th);
   phi = fmod(X[3], 2.*M_PI);
   //phi = X[3] % (2.*M_PI);
 
   double dth = M_PI/NTH;
   double dphi = 2.*M_PI/NPHI;
 
-  *thbin = (int)(th/dth);
-  *phibin = (int)(phi/dphi);
-
-  return 2.*M_PI*(-cos((*thbin+1)*dth) + cos((*thbin)*dth)) / NPHI;
-
+  *thbin = (int)(phi/dphi);
+  *phibin = (int)(th/dth);
 }
-
 #endif // RADIATION
-

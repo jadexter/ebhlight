@@ -200,11 +200,16 @@ extern grid_prim_type Psave;       // Half-step primitives
 extern grid_int_type pflag;     // Failure points
 extern grid_int_type fail_save;
 extern grid_fourvector_type jcon;
-#if RADIATION
+#if RADIATION | COOLING
 extern grid_fourvector_type radG; // Radiation four-force
 extern grid_fourvector_type radG_prev; // Radiation four-force
 extern grid_fourvector_type radG_buf;
 extern grid_tensor_type Rmunu;    // Radiation stress-energy tensor
+extern grid_int_type Nsuper;
+extern grid_double_type Esuper;
+extern grid_prim_type psupersave;
+#endif // RADIATION OR COOLING
+#if RADIATION
 extern grid_int_type Nsph;
 extern grid_double_type nph;
 extern struct of_photon **photon_lists;
@@ -214,13 +219,16 @@ extern double nuLnu[MAXNSCATT+1][NTH][NPHI][NU_BINS_SPEC];
 extern double Jrad[MAXNSCATT+2][N1+2*NG][N2+2*NG][N3+2*NG];
 extern double Jrad_buf[MAXNSCATT+2][N1+2*NG][N2+2*NG][N3+2*NG];
 extern grid_int_type Nem, Nabs, Nsc;
-extern grid_int_type Nsuper;
-extern grid_double_type Esuper;
-extern grid_prim_type psupersave;
-#endif
+#endif // RADIATION
 #if ELECTRONS
 extern grid_double_type Qvisc_e, Qvisc_p, Qcoul;
 #endif // ELECTRONS
+#if COOLING
+extern grid_double_type Qcool;
+#if (TCOOL == 1) && (METRIC == MKS || METRIC == MMKS)
+extern double Kmu[4];
+#endif
+#endif // COOLING
 
 /*******************************************************************************
     GLOBAL VARIABLES SECTION
@@ -237,7 +245,11 @@ extern double gam;
 extern double M_unit;
 extern double Reh;
 extern double Risco;
-#if RADIATION
+#if COOLING
+extern double Tel_target;
+extern double Tel_rslope;
+#endif
+#if RADIATION || COOLING
 extern double mbh, Mbh, L_unit, T_unit, M_unit, RHO_unit, U_unit, B_unit;
 extern double Ne_unit, Thetae_unit, kphys_to_num;
 extern double tp_over_te, thetae_max, sigma_max, kdotk_tol;
@@ -308,6 +320,12 @@ extern int nthreads;
 extern double game, gamp;
 extern double fel0;
 #endif
+// cooling
+#if COOLING
+extern double tcool0;
+extern double tcoolOmega0;
+extern double q_constant;
+#endif
 
 // Set global variables that indicate current local metric, etc.
 struct of_geom {
@@ -360,7 +378,7 @@ struct of_microphysics {
 // More grid functions. Axisymmetry assumed.
 extern double conn[N1 + 2*NG][N2 + 2*NG][NDIM][NDIM][NDIM];
 extern struct of_geom ggeom[N1+2*NG][N2+2*NG][NPG];
-#if RADIATION
+#if RADIATION || COOLING
 //extern double dt_light, dt_light_min;
 extern double dt_light[N1+2*NG][N2+2*NG], dt_light_min;
 #endif
@@ -473,15 +491,20 @@ void record_superphoton(double X[NDIM], struct of_photon *ph);
 // electrons.c
 #if ELECTRONS
 void init_electrons();
-void heat_electrons(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, 
+void heat_electrons(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf,
   double Dt);
 double get_fel(int i, int j, int k, double p[NVAR]);
-#if RADIATION
-void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, 
+#if RADIATION || COOLING
+void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf,
   double Dt);
 void apply_rad_force_e(grid_prim_type Prh, grid_prim_type Pr,
   grid_fourvector_type radG, double Dt);
 #endif // RADIATION
+#if COOLING
+void electron_cooling(grid_prim_type Ph, double t, double dt);
+void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt);
+double get_tcool(int i, double r);
+#endif
 void fixup_electrons(grid_prim_type p);
 #endif
 
@@ -611,12 +634,19 @@ void push_superphotons(double dt);
 #endif
 
 // rad_utils.c
+#if RADIATION || COOLING
+void set_units();
+#endif
+#if COOLING && (TCOOL == 1)
+#if METRIC == MKS || METRIC == MMKS
+void set_ISCOquantities();
+#endif
+#endif
 #if RADIATION
 void init_rad(grid_prim_type Prad);
 void init_superphoton_resolution();
 void update_superphoton_resolution(grid_prim_type Prad);
 double linear_interp_log(double x, double *table, double lmin, double dl);
-void set_units();
 void list_remove(struct of_photon **ph, struct of_photon **ph_head,
   struct of_photon **ph_prev);
 double get_Thetae(double P[NVAR]);
@@ -633,11 +663,11 @@ void copy_photon(struct of_photon *ph, struct of_photon *phc);
 void print_ph_diag(struct of_photon *ph);
 int get_X_K_interp(struct of_photon *ph, double t_interp, double X[NDIM],
   double Kcov[NDIM], double Kcon[NDIM]);
-int push_to_X_K(double t, struct of_photon *ph, double X[NDIM],                  
+int push_to_X_K(double t, struct of_photon *ph, double X[NDIM],
   double Kcov[NDIM], double Kcon[NDIM]);
 int to_be_pushed(double t, double dt, struct of_photon *ph);
 void swap_ph(struct of_photon **donor, struct of_photon **recipient);
-double get_nuLnu_bin(double X[NDIM], int *thbin, int *phibin);
+void get_nuLnu_bin(double X[NDIM], int *thbin, int *phibin);
 #endif
 
 // radiation.c
@@ -696,7 +726,7 @@ void report_performance();
 void timers_reset();
 
 // utils.c
-void *safe_malloc(size_t num, size_t size);
+void *safe_malloc(int size);
 void safe_system(const char *command);
 void safe_fscanf(FILE *stream, const char *format, ...);
 

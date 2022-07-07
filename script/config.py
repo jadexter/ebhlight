@@ -184,7 +184,7 @@ def build(PROBLEM, PATHS):
   # GSL
   host['GSL_DIR'] = util.sanitize_path(host['GSL_DIR'])
   LIB_FLAGS += (' -lgsl -lgslcblas'
-                + ' -Wl,-rpath='
+                + ' -Wl,-rpath '
                 + host['GSL_DIR'] + 'lib/')
   LIBRARIES += '-L' + host['GSL_DIR'] + 'lib/'
   INCLUDES  += '-I' + host['GSL_DIR'] + 'include/'
@@ -192,7 +192,7 @@ def build(PROBLEM, PATHS):
   # MPI
   if 'MPI_DIR' in host:
     host['MPI_DIR'] = util.sanitize_path(host['MPI_DIR'])
-    LIB_FLAGS += (' -Wl,-rpath='
+    LIB_FLAGS += (' -Wl,-rpath '
                   + host['MPI_DIR'] + 'lib/')
     LIBRARIES += ' -L' + host['MPI_DIR'] + 'lib/'
     INCLUDES  += ' -I' + host['MPI_DIR'] + 'include/'
@@ -201,7 +201,7 @@ def build(PROBLEM, PATHS):
   if 'HDF5_DIR' in host:
     host['HDF5_DIR'] = util.sanitize_path(host['HDF5_DIR'])
     LIB_FLAGS += (' -lhdf5_hl -lhdf5'
-                  +' -Wl,-rpath='
+                  +' -Wl,-rpath '
                   + host['HDF5_DIR'] + 'lib/')
     LIBRARIES += ' -L' + host['HDF5_DIR'] + 'lib/'
     INCLUDES  += ' -I' + host['HDF5_DIR'] + 'include/'

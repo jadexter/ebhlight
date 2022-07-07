@@ -42,12 +42,21 @@ bhlight
 
 # Output files
 dumps
+dumps/
+*.tar.gz
+*.tar.gz*
 restarts
+restarts/
+laptop_*/
 generate_all_plots.txt
 test_all.txt
 *.out
 *.err
 hotcross.dat
+output_*
+prob/test_*
+prob/old_*
+prob/bak_*
 
 # Build system
 TMP
@@ -61,6 +70,7 @@ param_template.dat
 # SLURM
 out_*
 err_*
+compile.sh
 
 # Debug files
 *.dSYM/

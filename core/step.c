@@ -14,7 +14,7 @@ double fluxcalc(grid_prim_type Pr);
 void flux_ct(grid_prim_type F1, grid_prim_type F2, grid_prim_type F3);
 void lr_to_flux(double p_l[NVAR], double p_r[NVAR], struct of_geom *geom,
   int dir, double Flux[NVAR], double *maxSpeed);
-#if RADIATION
+#if RADIATION || COOLING
 void apply_rad_force(grid_prim_type Pr, double Dt);
 #endif
 
@@ -39,7 +39,7 @@ void step()
   fixup_utoprim(Ph);
   #if ELECTRONS
   fixup_electrons(Ph);
-  #if RADIATION
+  #if RADIATION || COOLING
   coulomb(P, P, Ph, 0.5*dt);
   fixup_electrons(Ph);
   #endif
@@ -53,6 +53,12 @@ void step()
   interact(Ph, t, dt);
   bound_superphotons(t, dt);
   #endif
+  // Cooling step to set radG
+  #if ELECTRONS
+  #if COOLING
+  electron_cooling(Ph, t, dt);
+  #endif
+  #endif
 
   // Corrector step
   ndt = advance(P, Ph, dt, P, 1);
@@ -63,14 +69,14 @@ void step()
   fixup_utoprim(P);
   #if ELECTRONS
   fixup_electrons(P);
-  #if RADIATION
+  #if RADIATION || COOLING
   coulomb(P, Ph, P, dt);
   fixup_electrons(P);
   #endif
   #endif
   bound_prim(P);
 
-  #if RADIATION
+  #if RADIATION || COOLING
 
   // Apply radiation four-force to fluid
   apply_rad_force(P, dt);
@@ -88,9 +94,9 @@ void step()
 
   // Increment time
   t += dt;
-  
+
   #if RADIATION
-  ndt = cour*dt_light_min; 
+  ndt = cour*dt_light_min;
   #endif
 
   // Set next timestep
@@ -101,10 +107,10 @@ void step()
   dt = ndt;
 
   // Don't step beyond end of run
-  if (t + dt > tf) {                                                         
-    dt = tf - t;                                                             
+  if (t + dt > tf) {
+    dt = tf - t;
   }
-  
+
   dt = mpi_min(dt);
 }
 
@@ -149,20 +155,23 @@ double advance(grid_prim_type Pi, grid_prim_type Pb, double Dt,
     }
 
     pflag[i][j][k] = Utoprim(U, &(ggeom[i][j][CENT]), Pf[i][j][k]);
-    if(pflag[i][j][k])
+    if(pflag[i][j][k]){
       fail_save[i][j][k] = 1;
+      fprintf(stderr,"[%i][istart=%i][%i %i %i] pflag = %i in advance\n",
+              mpi_myrank(), global_start[1], i, j, k, pflag[i][j][k]);
+    }
   } // ZLOOP
   timer_stop(TIMER_UPDATE);
 
   return (ndt);
 }
 
-#if RADIATION
+#if RADIATION || COOLING // COOLING HERE I THINK?
 void apply_rad_force(grid_prim_type Pr, double Dt)
 {
   double U[NVAR];
   struct of_state q;
-  
+
   timer_start(TIMER_UPDATE);
 
   #pragma omp parallel for schedule(guided) private (q, U) collapse(3)
@@ -179,9 +188,11 @@ void apply_rad_force(grid_prim_type Pr, double Dt)
     }
 
     pflag[i][j][k] = Utoprim(U, &(ggeom[i][j][CENT]), Pr[i][j][k]);
-    
+
     if(pflag[i][j][k]) {
       fail_save[i][j][k] = 1;
+      fprintf(stderr,"[%i][istart=%i][%i %i %i] pflag = %i in apply rad force\n",
+              mpi_myrank(), global_start[1], i, j, k, pflag[i][j][k]);
     }
   } // ZLOOP
   timer_stop(TIMER_UPDATE);
@@ -204,7 +215,7 @@ double fluxcalc(grid_prim_type Pr)
       KSLOOP(-1,N3) {
 
         ISLOOP(-NG,N1-1+NG) PLOOP Ptmp[i][ip] = Pr[i][j][k][ip];
-        
+
         reconstruct(Ptmp, N1, P_l, P_r);
 
         ISLOOP(0,N1) {
@@ -334,4 +345,3 @@ void lr_to_flux(double P_l[NVAR], double P_r[NVAR], struct of_geom *geom,
 
   *maxSpeed = ctop;
 }
-

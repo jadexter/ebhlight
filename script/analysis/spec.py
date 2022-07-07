@@ -28,11 +28,11 @@ if freq is not None:
   print(dump['nuLnu'].shape)
   nuLnu = dump['nuLnu'].sum(axis=0).sum(axis=-2)
   for n in range(hdr['nth']):
-    print(np.interp(freq, nu, nuLnu[n,:]))
+    print(np.interp(freq, nu, nuLnu[n,:])*4*np.pi/hdr['dOmega'][n,:].sum(axis=-1))
     print(n)
 
 fig, ax = plt.subplots(1, 1, figsize=(10,10))
-nuLnu = dump['nuLnu'].sum(axis=0).mean(axis=(0,1))
+nuLnu = dump['nuLnu'].sum(axis=0).sum(axis=0).sum(axis=0)
 ax.step(nu, nuLnu, where='mid', color='k')
 ax.set_xscale('log'); ax.set_yscale('log')
 maxL = nuLnu.max()

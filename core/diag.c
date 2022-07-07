@@ -25,6 +25,8 @@ void reset_dump_variables()
   memset(Nem, 0, (N1+2*NG)*(N2+2*NG)*(N3+2*NG)*sizeof(int));
   memset(Nabs, 0, (N1+2*NG)*(N2+2*NG)*(N3+2*NG)*sizeof(int));
   memset(Nsc, 0, (N1+2*NG)*(N2+2*NG)*(N3+2*NG)*sizeof(int));
+  #endif
+  #if RADIATION | COOLING
   memset(Esuper, 0, (N1+2*NG)*(N2+2*NG)*(N3+2*NG)*sizeof(double));
   memset(Nsuper, 0, (N1+2*NG)*(N2+2*NG)*(N3+2*NG)*sizeof(int));
   #endif
@@ -382,13 +384,13 @@ void record_superphoton(double X[NDIM], struct of_photon *ph)
   double nu = -ph->Kcov[2][0]*ME*CL*CL/HPL;
 
   int thbin, phibin, nubin = (log(nu) - lnumin)/dlnu;
-  double dOmega = get_nuLnu_bin(X, &thbin, &phibin);
+  get_nuLnu_bin(X, &thbin, &phibin);
 
   // Store dE / dlognu dOmega dt
   if (nubin >= 0 && nubin < NU_BINS_SPEC) {
     #pragma omp atomic
     nuLnu[nscatt][thbin][phibin][nubin] -= ph->w*ph->Kcov[2][0]*ME*CL*CL/
-                                  (dlnu*DTd*T_unit) * 4.*M_PI / dOmega;
+                                  (dlnu*DTd*T_unit);
     #pragma omp atomic
     step_rec++;
   }

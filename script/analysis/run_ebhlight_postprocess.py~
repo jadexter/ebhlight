@@ -1,0 +1,222 @@
+from __future__ import print_function
+import numpy as np
+import glob
+import pickle
+import sys
+from hdf5_to_dict import *
+
+
+def Qmri(dir=2):
+    """
+    APPROXIMATELY Computes number of theta cells resolving one MRI wavelength
+    """
+#    global bu,rho,uu,_dx2,_dx3
+    #cvel()
+    #corrected this expression to include both 2pi and dxdxp[3][3] 
+    #also corrected defition of va^2 to contain bsq+gam*ug term
+    #need to figure out how to properly measure this in fluid frame
+    vaudir = np.abs(bu[:,:,:,dir])/np.sqrt(rho+bsq+gam*ug)
+    omega = uu[:,:,:,3]/uu[:,:,:,0]+1e-15# dxdxp[3][3] needed here but = 1 in usual x3 = phi coords
+    lambdamriudir = 2*np.pi * vaudir / omega
+    if dir == 2:
+        res=lambdamriudir/_dx2
+    elif dir == 3:
+        res=lambdamriudir/_dx3
+    return(res)
+
+delta = lambda kapa,nu: (kapa==nu)
+fTudEM = lambda kapa,nu: bsq*uu[:,:,:,kapa]*ud[:,:,:,nu] + 0.5*bsq*delta(kapa,nu) - bu[:,:,:,kapa]*bd[:,:,:,nu]
+fTudMA = lambda kapa,nu: (rho+gam*ug)*uu[:,:,:,kapa]*ud[:,:,:,nu]+(gam-1)*ug*delta(kapa,nu)
+fTud = lambda kapa,nu: fTudEM(kapa,nu) + fTudMA(kapa,nu)
+
+sim_name = sys.argv[1]
+print('ebhlight postprocess: ',sim_name)
+fname='ebhlight_postprocess_'+sim_name+'.p'
+try:
+    data=pickle.load(open(fname,'rb'))
+    framestart=len(data['t'])
+    print('found previous file, start from frame ',str(framestart))
+except:
+    print('no previous file, starting fresh')
+    framestart=0
+
+files=sorted(glob.glob('dumps/dump*.h5'))
+gfile='dumps/grid.h5'
+
+# 1D radial profiles
+betar = []; Q2r = []; Q3r = []; thetaer = []; mdotr = []#; thetae4r = []
+hr = []; bcorr = []; rhocorr = []; ucorr = []; thetaecorr = []
+dens = []; pr = []; b2 = []; hr = []; vphi = []; vr = []; tl = []; phibhr = []
+b2r = []; b2p = []; b2t = []; betar2 = []
+Qemr = []; urr = []; nphr = []; Jemr = []; Jtotr = []; Jscr = []; betarr = []
+hrsig = []; betasig = []; b2sig = []; nulnu = []; Qscr = []; Nemr = []; Nscr = []
+
+# 2D az-averaged maps
+#rhoaz = []; thetaeaz=[]; betaaz = []; betaraz = []; uraz = []; nphaz = []
+
+# 2D midplane maps
+#rhomid = []; thetaemid=[]; betamid=[]; betarmid=[]; urmid = []; nphmid = []
+
+hdr = load_hdr(files[0])
+geom = load_geom(hdr)
+gdet = geom['gdet']
+_dx2 = geom['X2'][0,1,0]-geom['X2'][0,0,0] 
+gcon = geom['gcon']
+r = geom['r']; th = geom['th']
+s=np.shape(r); nx,ny,nz = s
+if nz > 1:
+    _dx3 = = geom['X3'][0,0,1]-geom['X3'][0,0,0]
+else:
+    _dx3 = 2.*np.pi
+gam=hdr['gam']; gamp=hdr['gamp']; game=hdr['game']
+i=framestart
+has_radiation = hdr['RADIATION']
+has_electrons = hdr['ELECTRONS']
+if has_radiation:
+    M_unit = hdr['M_unit']
+    L_unit = hdr['L_unit']
+    T_unit = hdr['T_unit']
+else:
+    M_unit = -1
+    L_unit = -1
+    T_unit = -1
+
+for f in files[framestart:]:
+    d=load_dump(f,geom=geom)
+    print('dump'+str(i))
+    rho=d['RHO']; ug=d['UU']; bsq=d['bsq']; t=d['t']
+    uu=d['ucon']; ud=d['ucov']; bu=d['bcon']; bd=d['bcov']
+    B1=d['B1']; thetae=d['Thetae']
+
+    sigcut = bsq/rho < 30.
+
+    weight=rho*sigcut*gdet
+    rhosum=np.sum(np.sum(weight,axis=-1),axis=-1)
+    pgr=np.sum(np.sum((gam-1.)*ug*weight,axis=-1),axis=-1)/rhosum
+    pr.append(pgr)
+    bsqr=np.sum(np.sum(bsq*weight,axis=-1),axis=-1)/rhosum
+    b2.append(bsqr)
+    rhorr=np.sum(np.sum(rho*weight,axis=-1),axis=-1)/rhosum
+    tl.append(t)
+    dens.append(rhorr)
+    h2r=np.sum(np.sum(weight*(r*np.cos(th))**2.,axis=-1),axis=-1)/np.sum(np.sum(weight,axis=-1),axis=-1)
+    hr.append(np.sqrt(h2r))
+# note these are in MKS coordinates! KS coordinates need vr = r * ux1/ut and for BL need also the other transformation
+    vphir=np.sum(np.sum(weight*uu[:,:,:,3]/uu[:,:,:,0],axis=-1),axis=-1)/rhosum
+    vrr=np.sum(np.sum(weight*uu[:,:,:,1]/uu[:,:,:,0],axis=-1),axis=-1)/rhosum
+    vr.append(vrr); vphi.append(vphir)
+    betar.append(pgr/bsqr*2.)
+    betar2.append(np.sum(np.sum(d['beta']*weight,-1),-1)/rhosum)
+    Q2=Qmri(dir=2); Q3=Qmri(dir=3)
+    FM = -(weight*uu[:,:,:,1]).sum(-1).sum(-1)*_dx2*_dx3
+    PhiBH = 0.5*(4.*np.pi)**0.5*np.abs(gdet*B1).sum(-1).sum(-1)*_dx2*_dx3
+#    thetae = d['Thetae']
+   # thetae = 2./3.*ugeldis/rho*(1.67e-24/9.11e-28)
+   # thetae4 = 2./3.*ugel4/rho*(1.67e-24/9.11e-28)
+# I want to measure b^\theta / b^\phi in some meaningful way
+# this is a convergence criterion for MRI right? How is that defined?
+    bph2 = bu[:,:,:,3]*bd[:,:,:,3]
+    br2 = bu[:,:,:,1]*bd[:,:,:,1]
+    bth2 = bu[:,:,:,2]*bd[:,:,:,2]
+    b2rt=np.sum(br2[:,ny//2,:]*gdet[:,ny//2,:]*rho[:,ny//2,:],axis=-1)/np.sum(gdet[:,ny//2,:]*rho[:,ny//2,:],axis=-1)
+    b2tt=np.sum(bth2[:,ny//2,:]*gdet[:,ny//2,:]*rho[:,ny//2,:],axis=-1)/np.sum(gdet[:,ny//2,:]*rho[:,ny//2,:],axis=-1)
+    b2pt=np.sum(bph2[:,ny//2,:]*gdet[:,ny//2,:]*rho[:,ny//2,:],axis=-1)/np.sum(gdet[:,ny//2,:]*rho[:,ny//2,:],axis=-1)
+    b2r.append(b2rt); b2t.append(b2tt); b2p.append(b2pt)
+    thetaer.append(np.sum(np.sum(thetae*weight,axis=-1),axis=-1)/rhosum)
+    Q2r.append(np.sum(np.sum(Q2*weight,axis=-1),axis=-1)/rhosum)
+    Q3r.append(np.sum(np.sum(Q3*weight,axis=-1),axis=-1)/rhosum)
+    mdotr.append(FM)
+    phibhr.append(PhiBH/FM**0.5)
+
+# new radiation variables
+# George normalization fixes for Jem, Jtot, Qem, Qsc
+    if has_radiation:
+        Qemr.append(np.sum(np.sum(d['Qem']*hdr['DTd']/d['dt']*weight,-1),-1)/rhosum)
+        Qscr.append(np.sum(np.sum(d['Qsc']*hdr['DTd']/d['dt']*weight,-1),-1)/rhosum)
+        Jemr.append(np.sum(np.sum(d['Jem']*d['dt']/hdr['DTd']*weight,-1),-1)/rhosum)
+        Jtotr.append(np.sum(np.sum(d['Jtot']*d['dt']/hdr['DTd']*weight,-1),-1)/rhosum)
+        Jscr.append(np.sum(np.sum(d['Jsc']*d['dt']/hdr['DTd']*weight,-1),-1)/rhosum)
+        Nemr.append(np.sum(np.sum(d['Nem']*hdr['DTd']/d['dt']*weight,-1),-1)/rhosum)
+        Nscr.append(np.sum(np.sum(d['Nsc']*hdr['DTd']/d['dt']*weight,-1),-1)/rhosum)
+        urr.append(np.sum(np.sum(d['ur']*weight,-1),-1)/rhosum)
+        nphr.append(np.sum(np.sum(d['nph']*weight,-1),-1)/rhosum)
+        betarr.append(np.sum(np.sum(d['betar']*weight,-1),-1)/rhosum)
+    i=i+1
+
+# 2D map variables following run_harmpi_postprocess_2d
+    # going to try doing only vertical averages
+    # rhomid = []; thetaemid=[]; betamid=[]; betarmid=[]; urmid = []; nphmid = []
+
+    rhosum=np.sum(weight,axis=-2)
+    pgmid=np.sum(ug*weight,axis=-2)/rhosum
+    bsqmid=np.sum(bsq*weight,axis=-2)/rhosum
+    rhomid=np.sum(rho*weight,axis=-2)/rhosum
+    hrmid=np.sum((r*np.cos(th))**2.*weight,axis=-2)/rhosum
+
+    vphimid=np.sum(weight*uu[:,:,:,3]/uu[:,:,:,0],axis=-2)/rhosum
+    vrmid=np.sum(weight*uu[:,:,:,1]/uu[:,:,:,0],axis=-2)/rhosum
+    betamid=pgmid/bsqmid*2.
+    PhiBHmid = 0.5*(4.*np.pi)**0.5*np.abs(gdet*B1).sum(-2)*_dx2
+    thetaemid = np.sum(weight*d['Thetae'],-2)/rhosum
+
+    if has_radiation:
+        betarmid = np.sum(weight*d['betar'],-2)/rhosum
+        urmid = np.sum(weight*d['ur'],-2)/rhosum
+        nphmid = np.sum(weight*d['nph'],-2)/rhosum
+        Qemmid = np.sum(weight*d['Qem'],-2)/rhosum
+        jemmid = np.sum(weight*d['Jem'],-2)/rhosum
+    else:
+        betarmid = -1; urmid = -1; nphmid = -1; Qemmid = -1; jemmid=-1
+
+# magnetic field midplane profiles
+    btor = bu[:,ny//2,:,3]
+    bver = bu[:,ny//2,:,2]
+    brad = bu[:,ny//2,:,1]
+
+    b2rmid=br2[:,ny//2,:]
+    b2tmid=bth2[:,ny//2,:]
+    b2pmid=bph2[:,ny//2,:]
+
+    # now simply az averaged variables not worrying about density-weighting
+    bsqaz=np.sum(bsq,axis=-1)
+    rhoaz=np.sum(rho,axis=-1)
+    pgaz=np.sum(ug,-1)
+
+    # bulk Lorentz factor Chael+2019
+    gamaz = np.sum(d['ucon'][:,:,:,0]/np.sqrt(-gcon[:,:,:,0,0]),-1)
+
+    vphiaz=np.sum(uu[:,:,:,3]/uu[:,:,:,0],axis=-1)
+    vraz=np.sum(uu[:,:,:,1]/uu[:,:,:,0],axis=-1)
+    betaaz=np.sum(d['beta'],-1)
+    thetaeaz = np.sum(d['Thetae'],-1)
+
+    if has_radiation:
+        betaraz = np.sum(d['betar'],-1)
+        uraz = np.sum(d['ur'],-1)
+        nphaz = np.sum(d['nph'],-1)
+        jemaz = np.sum(d['Jem'],-1)
+        Qemaz = np.mean(d['Qem'],-1)
+        Beaz = np.mean(-(fTud(0,0)+d['Rmunu'][:,:,:,0,0])/d['RHO']/d['ucon'][:,:,:,0]-1.,-1)
+    else:
+        betaraz = -1; uraz = -1; nphaz = -1; jemaz = -1; Qemaz = -1
+        Beaz = np.mean(-fTud(0,0)/d['RHO']/d['ucon'][:,:,:,0]-1.,-1)
+
+# jet power calculation
+    pjet = np.sum(geom['gdet']*(-fTud(1,0)-d['RHO']*uu[:,:,:,1]),-1)*hdr['dx'][3]
+    betagam = np.sum((-fTud(1,0)/d['RHO']/uu[:,:,:,1])**2.-1.,-1)
+
+    # save 2D files at each snapshot
+    data2d = dict({'thetaeaz':thetaeaz,'rhoaz':rhoaz,'bsqaz':bsqaz,'pgaz':pgaz,'vphiaz':vphiaz,'vraz':vraz,'betaaz':betaaz,'betaraz':betaraz,'uraz':uraz,'nphaz':nphaz,'jemaz':jemaz,'Qemaz':Qemaz,'thetaemid':thetaemid,'rhomid':rhomid,'bsqmid':bsqmid,'vphimid':vphimid,'vrmid':vrmid,'betamid':betamid,'betarmid':betarmid,'urmid':urmid,'nphmid':nphmid,'jemmid':jemmid,'Qemmid':Qemmid,'b2rmid':b2rmid,'b2pmid':b2pmid,'b2tmid':b2tmid,'btor':btor,'bver':bver,'brad':brad,'PhiBHmid':PhiBHmid,'hrmid':hrmid,'pjet':pjet,'betagam':betagam,'th':th[0,:,0],'r':r[:,0,0],'gamaz':gamaz,'Beaz':Beaz})
+    pickle.dump(data2d,open('ebhlight_postprocess2d_'+sim_name+'_'+str(i)+'.p','wb'))
+    
+data_new = dict({'r':np.array(r[:,0,0]),'beta':np.array(betar),'beta2':np.array(betar2),'thetae':np.array(thetaer),'Q2':np.array(Q2r),'Q3':np.array(Q3r),'mdot':np.array(mdotr),'rho':np.array(dens),'p':np.array(pr),'b2':np.array(b2),'h':np.array(hr),'vphi':np.array(vphi),'vr':np.array(vr),'t':np.array(tl),'phibh':np.array(phibhr),'b2r':np.array(b2r),'b2t':np.array(b2t),'b2p':np.array(b2p),'urr':np.array(urr),'nphr':np.array(nphr),'Jemr':np.array(Jemr),'Jtotr':np.array(Jtotr),'Jscr':np.array(Jscr),'betarr':np.array(betarr),'Qemr':np.array(Qemr),'Qscr':np.array(Qscr),'Nemr':np.array(Nemr),'Nscr':np.array(Nscr),'nulnu':np.array(nulnu),'M_unit':M_unit,'L_unit':L_unit,'T_unit':T_unit})
+
+if framestart > 0:
+    keys = data.keys()
+    data_all=data_new.copy()
+    for k in keys:
+        if k!='r':
+            data_all[k]=np.append(data[k],data_new[k],0)
+    data_new=data_all
+
+pickle.dump(data_new,open(fname,'wb'))

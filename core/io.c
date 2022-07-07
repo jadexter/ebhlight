@@ -31,15 +31,15 @@ void hdf5_set_directory(const char *path)
   strncpy(hdf5_cur_dir, path, STRLEN-1);
 }
 void hdf5_add_att(const void *att, const char *att_name, const char *data_name, hid_t file_id, hsize_t hdf5_type)
-{                                                                                
-  char path[STRLEN];                                                             
-  strncpy(path, hdf5_cur_dir, STRLEN);                                           
-  strncat(path, data_name, STRLEN - strlen(path));                               
-                                                                                 
+{
+  char path[STRLEN];
+  strncpy(path, hdf5_cur_dir, STRLEN);
+  strncat(path, data_name, STRLEN - strlen(path));
+
   hid_t attribute_id = H5Acreate_by_name(file_id, path, att_name, hdf5_type, H5Screate(H5S_SCALAR), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  H5Awrite(attribute_id, hdf5_type, att);                                        
-  H5Aclose(attribute_id);                                                        
-}   
+  H5Awrite(attribute_id, hdf5_type, att);
+  H5Aclose(attribute_id);
+}
 // Add an attribute named "units"
 void hdf5_add_units(const char *name, const char *unit, hid_t file_id)
 {
@@ -69,7 +69,7 @@ void hdf5_write_str_list (const void *data, const char *name, hid_t file_id,
   H5Dclose(dataset);
   H5Sclose(dataspace);
   H5Tclose(vlstr_h5t);
-}  
+}
 
 
 hid_t file_id, plist_id;
@@ -276,7 +276,7 @@ void track_ph()
 
   // Create buffer for output
   struct of_track_photon *io_track = safe_malloc(
-    num_tracked, sizeof(struct of_track_photon));
+    num_tracked*sizeof(struct of_track_photon));
   int nio = 0;
   double X[NDIM], Kcov[NDIM], Kcon[NDIM];
   for (int n = 0; n < nthreads; n++) {
@@ -309,7 +309,7 @@ void track_ph()
     H5Pclose(plist_id);
 
     // One dataset per processor; each processor must create all datasets
-    hid_t *ph_dsets = safe_malloc(mpi_nprocs(), sizeof(hid_t));
+    hid_t *ph_dsets = safe_malloc(mpi_nprocs()*sizeof(hid_t));
     for (int n = 0; n < mpi_nprocs(); n++) {
       char dsetnam[STRLEN];
       sprintf(dsetnam, "trackph_%08d", n);
@@ -360,7 +360,7 @@ void dump_grid()
   H5Pclose(plist_id);
 
   {
-    double *Xharm = safe_malloc(N1*N2*N3*NDIM, sizeof(double));
+    double *Xharm = safe_malloc(N1*N2*N3*NDIM*sizeof(double));
     int n = 0;
     ZLOOP
     {
@@ -372,7 +372,7 @@ void dump_grid()
   }
 
   { // If metric == Minkowski, then Xcart == Xharm
-    double *Xcart = safe_malloc(N1*N2*N3*NDIM, sizeof(double));
+    double *Xcart = safe_malloc(N1*N2*N3*NDIM*sizeof(double));
     double X[NDIM],Xcart_loc[NDIM];
     int n = 0;
     ZLOOP {
@@ -399,8 +399,8 @@ void dump_grid()
     }
     hsize_t mstart[RANK] = {0, 0, 0, 0};
     hsize_t memsize_tot = product_hsize_t(mdims, RANK);
-    double *XFharm = safe_malloc(memsize_tot, sizeof(double));
-    double *XFcart = safe_malloc(memsize_tot, sizeof(double));
+    double *XFharm = safe_malloc(memsize_tot*sizeof(double));
+    double *XFcart = safe_malloc(memsize_tot*sizeof(double));
     double X[NDIM], Xcart_loc[NDIM];
     int n = 0;
     ZSLOOP(0, mdims[0]-1, 0, mdims[1]-1, 0, mdims[2]-1) {
@@ -421,7 +421,7 @@ void dump_grid()
 
   #if METRIC == MKS || METRIC == MMKS
   {
-    double *Xbl = safe_malloc(N1*N2*N3*NDIM, sizeof(double));
+    double *Xbl = safe_malloc(N1*N2*N3*NDIM*sizeof(double));
     int n = 0;
     ZLOOP
     {
@@ -439,7 +439,7 @@ void dump_grid()
   #endif
 
   {
-    double *gcov = safe_malloc(N1*N2*N3*NDIM*NDIM, sizeof(double));
+    double *gcov = safe_malloc(N1*N2*N3*NDIM*NDIM*sizeof(double));
     int n = 0;
     ZLOOP {
       DLOOP2 {
@@ -452,7 +452,7 @@ void dump_grid()
   }
 
   {
-    double *gcon = safe_malloc(N1*N2*N3*NDIM*NDIM, sizeof(double));
+    double *gcon = safe_malloc(N1*N2*N3*NDIM*NDIM*sizeof(double));
     int n = 0;
     ZLOOP {
       DLOOP2 {
@@ -465,7 +465,7 @@ void dump_grid()
   }
 
   {
-    double *gdet = safe_malloc(N1*N2*N3, sizeof(double));
+    double *gdet = safe_malloc(N1*N2*N3*sizeof(double));
     int n = 0;
     ZLOOP {
       gdet[n] = ggeom[i][j][CENT].g;
@@ -476,7 +476,7 @@ void dump_grid()
   }
 
   {
-    double *alpha = safe_malloc(N1*N2*N3, sizeof(double));
+    double *alpha = safe_malloc(N1*N2*N3*sizeof(double));
     int n = 0;
     ZLOOP {
       alpha[n] = ggeom[i][j][CENT].alpha;
@@ -491,8 +491,8 @@ void dump_grid()
     double X[NDIM];
     double Lambda_con_local[NDIM][NDIM];
     double Lambda_cov_local[NDIM][NDIM];
-    double *Lambda_h2bl_con = safe_malloc(N1*N2*N3*NDIM*NDIM, sizeof(double));
-    double *Lambda_h2bl_cov = safe_malloc(N1*N2*N3*NDIM*NDIM, sizeof(double));
+    double *Lambda_h2bl_con = safe_malloc(N1*N2*N3*NDIM*NDIM*sizeof(double));
+    double *Lambda_h2bl_cov = safe_malloc(N1*N2*N3*NDIM*NDIM*sizeof(double));
     int n = 0;
     ZLOOP {
       coord(i, j, k, CENT, X);
@@ -513,8 +513,8 @@ void dump_grid()
     double X[NDIM];
     double Lambda_con_local[NDIM][NDIM];
     double Lambda_cov_local[NDIM][NDIM];
-    double *Lambda_bl2cart_con = safe_malloc(N1*N2*N3*NDIM*NDIM, sizeof(double));
-    double *Lambda_bl2cart_cov = safe_malloc(N1*N2*N3*NDIM*NDIM, sizeof(double));
+    double *Lambda_bl2cart_con = safe_malloc(N1*N2*N3*NDIM*NDIM*sizeof(double));
+    double *Lambda_bl2cart_cov = safe_malloc(N1*N2*N3*NDIM*NDIM*sizeof(double));
     int n = 0;
     ZLOOP {
       coord(i, j, k, CENT, X);
@@ -536,8 +536,8 @@ void dump_grid()
     double X[NDIM];
     double Lambda_con_local[NDIM][NDIM];
     double Lambda_cov_local[NDIM][NDIM];
-    double *Lambda_h2cart_con = safe_malloc(N1*N2*N3*NDIM*NDIM, sizeof(double));
-    double *Lambda_h2cart_cov = safe_malloc(N1*N2*N3*NDIM*NDIM, sizeof(double));
+    double *Lambda_h2cart_con = safe_malloc(N1*N2*N3*NDIM*NDIM*sizeof(double));
+    double *Lambda_h2cart_cov = safe_malloc(N1*N2*N3*NDIM*NDIM*sizeof(double));
     int n = 0;
     ZLOOP {
       coord(i, j, k, CENT, X);
@@ -597,6 +597,11 @@ void dump()
   #if ELECTRONS
   int has_electrons = ELECTRONS; WRITE_HDR(has_electrons, TYPE_INT);
   #endif
+  #if COOLING
+  int has_cooling = COOLING; WRITE_HDR(has_cooling, TYPE_INT);
+  int has_tcool = TCOOL; WRITE_HDR(has_tcool, TYPE_INT);
+  int init_electrons = INITELECTRONS; WRITE_HDR(init_electrons, TYPE_INT);
+  #endif
 
   WRITE_HDR(metric, TYPE_STR);
   char gridfile[STRLEN] = "grid.h5";
@@ -606,7 +611,7 @@ void dump()
   int n2 = N2TOT; WRITE_HDR(n2, TYPE_INT);
   int n3 = N3TOT; WRITE_HDR(n3, TYPE_INT);
   int n_prim = NVAR; WRITE_HDR(n_prim, TYPE_INT);
-  hdf5_write_str_list(vnams, "prim_names", file_id, STRLEN, NVAR);  
+  hdf5_write_str_list(vnams, "prim_names", file_id, STRLEN, NVAR);
 
   WRITE_HDR(gam, TYPE_DBL);
   WRITE_HDR(cour, TYPE_DBL);
@@ -619,11 +624,8 @@ void dump()
   WRITE_HDR(tptemax, TYPE_DBL);
   WRITE_HDR(fel0, TYPE_DBL);
   #endif
-  #if RADIATION
+  #if RADIATION // COOLING EDIT?
   WRITE_HDR(tp_over_te, TYPE_DBL);
-  WRITE_HDR(Mbh, TYPE_DBL);
-  hdf5_add_units("Mbh", "g", file_id);
-  hdf5_make_directory("units");
   int maxnscatt = MAXNSCATT; WRITE_HDR(maxnscatt, TYPE_INT);
   int nubins_emiss = NU_BINS_EMISS; WRITE_HDR(nubins_emiss, TYPE_INT);
   WRITE_HDR(numin_emiss, TYPE_DBL);
@@ -640,7 +642,12 @@ void dump()
   WRITE_HDR(thetae_max, TYPE_DBL);
   WRITE_HDR(sigma_max, TYPE_DBL);
   WRITE_HDR(kdotk_tol, TYPE_DBL);
+  #endif
 
+  #if RADIATION || COOLING
+  WRITE_HDR(Mbh, TYPE_DBL);
+  hdf5_add_units("Mbh", "g", file_id);
+  hdf5_make_directory("units");
   hdf5_set_directory("/header/units/");
   WRITE_HDR(L_unit, TYPE_DBL);
   hdf5_add_units("L_unit", "cm", file_id);
@@ -658,6 +665,18 @@ void dump()
   hdf5_add_units("Ne_unit", "cm^-3", file_id);
   WRITE_HDR(Thetae_unit, TYPE_DBL);
   hdf5_set_directory("/header/");
+  #endif
+
+  #if COOLING
+  WRITE_HDR(Tel_target, TYPE_DBL);
+  WRITE_HDR(Tel_rslope, TYPE_DBL);
+  WRITE_HDR(q_constant, TYPE_DBL);
+  #if TCOOL == 0
+  WRITE_HDR(tcool0, TYPE_DBL);
+  #endif
+  #if TCOOL == 1
+  WRITE_HDR(tcoolOmega0, TYPE_DBL);
+  #endif
   #endif
 
   hdf5_make_directory("geom");
@@ -682,7 +701,7 @@ void dump()
   hdf5_add_units("r_out", "code", file_id);
   WRITE_HDR(a, TYPE_DBL);
   WRITE_HDR(hslope, TYPE_DBL);
-    #if RADIATION
+  #if RADIATION // COOLING?
     double r_out_rad = Rout_rad; WRITE_HDR(r_out_rad, TYPE_DBL);
     hdf5_add_units("r_out_rad", "code", file_id);
     #endif
@@ -709,7 +728,7 @@ void dump()
     hdf5_add_units("r_out_rad", "code", file_id);
     #endif
   #endif
- 
+
   hdf5_set_directory("/");
   int is_full_dump = (dump_id % DTf == 0); WRITE_HDR(is_full_dump, TYPE_INT);
   WRITE_HDR(t, TYPE_DBL);
@@ -728,7 +747,7 @@ void dump()
   hdf5_set_directory("/extras/");
   double r_out_vis = Rout_vis; WRITE_HDR(r_out_vis, TYPE_DBL);
   hdf5_add_units("r_out_vis", "code", file_id);
-  
+
   hdf5_set_directory("/");
   WRITE_PRIM(P, "prims", TYPE_FLOAT);
   hdf5_add_units("prims", "code", file_id);
@@ -742,8 +761,8 @@ void dump()
     ZLOOP divb[i][j][k] = flux_ct_divb(i, j, k);
     WRITE_GRID(divb, "divb", TYPE_FLOAT);
     hdf5_add_units("divb", "code", file_id);
-    WRITE_GRID(fail_save, "fail", TYPE_INT); 
-   
+    WRITE_GRID(fail_save, "fail", TYPE_INT);
+
     #if ELECTRONS
     WRITE_GRID(Qvisc_e, "Qvisc_e", TYPE_FLOAT);
     hdf5_add_units("Qvisc_e", "code", file_id);
@@ -751,11 +770,20 @@ void dump()
     hdf5_add_units("Qvisc_p", "code", file_id);
     #endif
 
-    #if RADIATION
+    #if COOLING
+      // AMH output L grid under name Qcool
+      #if ELECTRONS
+      WRITE_GRID(Qcool, "Qcool", TYPE_FLOAT);
+      hdf5_add_units("Qcool", "code", file_id);
+      #endif
+    #endif
+    #if RADIATION || COOLING
       #if ELECTRONS
       WRITE_GRID(Qcoul, "Qcoul", TYPE_FLOAT);
       hdf5_add_units("Qcoul", "code", file_id);
       #endif
+    #endif
+#if RADIATION
       WRITE_GRID(Nsph, "Nsph", TYPE_INT);
       WRITE_GRID(nph, "nph", TYPE_FLOAT);
       WRITE_GRID(Nem, "Nem", TYPE_INT);
@@ -859,6 +887,7 @@ void restart_write(int restart_type)
   WRITE_HDR(metric, TYPE_STR);
   int electrons = ELECTRONS; WRITE_HDR(electrons, TYPE_INT);
   int radiation = RADIATION; WRITE_HDR(radiation, TYPE_INT);
+  int cooling = COOLING; WRITE_HDR(cooling, TYPE_INT);
   int nvar = NVAR; WRITE_HDR(nvar, TYPE_INT);
 
   WRITE_HDR(t, TYPE_DBL);
@@ -900,14 +929,16 @@ void restart_write(int restart_type)
     WRITE_HDR(poly_xt, TYPE_DBL);
     WRITE_HDR(poly_alpha, TYPE_DBL);
     WRITE_HDR(mks_smooth, TYPE_DBL);
-    #if RADIATION
+    #if RADIATION || COOLING
       WRITE_HDR(mbh, TYPE_DBL);
       WRITE_HDR(Mbh, TYPE_DBL);
-    #endif // RADIATION
+    #endif // RADIATION COOLING EDIT?
+    #if RADIATION
+      WRITE_HDR(tp_over_te, TYPE_DBL);
+    #endif
   #endif // METRIC
 
-  #if RADIATION
-    WRITE_HDR(tp_over_te, TYPE_DBL);
+  #if RADIATION || COOLING // COOLING EDIT?
     WRITE_HDR(L_unit, TYPE_DBL);
     WRITE_HDR(T_unit, TYPE_DBL);
     WRITE_HDR(M_unit, TYPE_DBL);
@@ -964,9 +995,9 @@ void restart_write(int restart_type)
     WRITE_GRID(Nabs, "Nabs", TYPE_INT);
 
     WRITE_GRID(Nsc, "Nsc", TYPE_INT);
-      
+
     WRITE_GRID(Esuper, "Esuper", TYPE_DBL);
-    
+
     WRITE_GRID(Nsuper, "Nsuper", TYPE_INT);
 
     {
@@ -1004,7 +1035,7 @@ void restart_write(int restart_type)
     hid_t space;
     char dsetnam[STRLEN];
     struct of_photon *wdata;
-    wdata = safe_malloc(step_tot, sizeof(struct of_photon));
+    wdata = safe_malloc(step_tot*sizeof(struct of_photon));
 
     // Copy superphotons into buffer
     int nph = 0;
@@ -1017,8 +1048,11 @@ void restart_write(int restart_type)
       }
     }
 
+    // XX FOR INDEPENDENT FILE WRITES THIS IS THE PART TO COMMENT OUT AND CHANGE
+    // TO WRITE TO A DIFFERENT FILE
+
     // Each processor must create all datasets
-    hid_t *ph_dsets = safe_malloc(mpi_nprocs(), sizeof(hid_t));
+    hid_t *ph_dsets = safe_malloc(mpi_nprocs()*sizeof(hid_t));
     for (int n = 0; n < mpi_nprocs(); n++) {
       sprintf(dsetnam, "photons_%08d", n);
       //int step_tot_buf = step_tot;
@@ -1113,14 +1147,16 @@ void restart_read(char *fname)
     READ_HDR(poly_xt, TYPE_DBL);
     READ_HDR(poly_alpha, TYPE_DBL);
     READ_HDR(mks_smooth, TYPE_DBL);
-    #if RADIATION
+    #if RADIATION || COOLING
       READ_HDR(mbh, TYPE_DBL);
       READ_HDR(Mbh, TYPE_DBL);
-    #endif // RADIATION
+    #endif // RADIATION COOLING?
+    #if RADIATION
+      READ_HDR(tp_over_te, TYPE_DBL);
+    #endif
   #endif // METRIC
 
-  #if RADIATION
-    READ_HDR(tp_over_te, TYPE_DBL);
+  #if RADIATION || COOLING
     READ_HDR(L_unit, TYPE_DBL);
     READ_HDR(T_unit, TYPE_DBL);
     READ_HDR(M_unit, TYPE_DBL);
@@ -1177,9 +1213,9 @@ void restart_read(char *fname)
     READ_GRID(Nabs, TYPE_INT);
 
     READ_GRID(Nsc, TYPE_INT);
-      
+
     READ_GRID(Esuper, TYPE_DBL);
-    
+
     READ_GRID(Nsuper, TYPE_INT);
 
     {
@@ -1214,7 +1250,7 @@ void restart_read(char *fname)
   // Superphoton datasets -- each processor must create all datasets
   hsize_t dims[1];
   int nph_in = 0;
-  hid_t *ph_dsets = safe_malloc(mpi_nprocs(), sizeof(hid_t));
+  hid_t *ph_dsets = safe_malloc(mpi_nprocs()*sizeof(hid_t));
   char dsetnam[STRLEN];
   for (int n = 0; n < mpi_nprocs(); n++) {
     sprintf(dsetnam, "photons_%08d", n);
@@ -1224,8 +1260,8 @@ void restart_read(char *fname)
     if (n == mpi_myrank()) nph_in = dims[0];
     H5Sclose(space);
   }
-  
-  struct of_photon *rdata = safe_malloc(nph_in, sizeof(struct of_photon));
+
+  struct of_photon *rdata = safe_malloc(nph_in*sizeof(struct of_photon));
   if (nph_in > 0) {
     H5Dread(ph_dsets[mpi_myrank()], phmemtype, H5S_ALL, H5S_ALL, H5P_DEFAULT,
       rdata);
@@ -1350,6 +1386,7 @@ int restart_init()
   strcpy(lastname, restartdir);
   strcat(lastname, fname);
 
+  // XX FOR INDEPENDENT FILE WRITES WE WOULD JUST REMOVE THE NTHREADS HERE?
   #if RADIATION
     photon_lists = malloc(nthreads*sizeof(struct of_photon*));
     #pragma omp parallel
@@ -1451,7 +1488,7 @@ void read_scalar(void *data, const char *name, hsize_t type)
   plist_id = H5Pcreate(H5P_DATASET_XFER);
   H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE);
   H5Dread(dset_id, type, memspace, memspace, plist_id, data);
-  
+
   H5Dclose(dset_id);
   H5Pclose(plist_id);
   H5Sclose(memspace);
@@ -1477,7 +1514,7 @@ void write_array(void *data, const char *name, hsize_t rank,
     for (int n = 0; n < rank; n++) {
       ntot *= mdims[n];
     }
-    float *buf = safe_malloc(ntot, sizeof(float));
+    float *buf = safe_malloc(ntot*sizeof(float));
     for (int n = 0; n < ntot; n++) {
       buf[n] = (float)(((double*)data)[n]);
     }

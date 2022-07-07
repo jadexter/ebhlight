@@ -11,11 +11,18 @@
 static MPI_Comm comm, comm_phi;
 static MPI_Datatype prim_face_subtype[4], pflag_face_subtype[4];
 static int rank, numprocs, periodic[3], neighbors[3][3][3];
+
+#if COOLING
+static MPI_Datatype radG_face_subtype[4];
+#endif
+
 #if RADIATION
 static MPI_Datatype mpi_photon_type, mpi_pointer_type;
-static MPI_Datatype radG_face_subtype[4];
 static MPI_Datatype Jrad_face_subtype[4];
 void mpi_photon_sendrecv(int is, int js, int ks, int ir, int jr, int kr);
+#endif
+
+#if RADIATION || COOLING
 #define NGR (1)
 #endif
 
@@ -116,7 +123,7 @@ void init_mpi()
     MPI_ORDER_C, pflag_type, &pflag_face_subtype[3]);
   MPI_Type_commit(&pflag_face_subtype[3]);
 
-  #if RADIATION
+  #if RADIATION || COOLING
   MPI_Datatype radG_type = MPI_DOUBLE;
   int radG_sizes[4] = {N1+2*NG,N2+2*NG,N3+2*NG,NDIM};
   int radG_starts[4] = {0,0,0,0};
@@ -135,7 +142,9 @@ void init_mpi()
   MPI_Type_create_subarray(4, radG_sizes, radG_X3_subsizes, radG_starts,
     MPI_ORDER_C, radG_type, &radG_face_subtype[3]);
   MPI_Type_commit(&radG_face_subtype[3]);
-  
+  #endif
+
+  #if RADIATION // ASSUMING NO COOLING?
   MPI_Datatype Jrad_type = MPI_DOUBLE;
   int Jrad_sizes[4] = {MAXNSCATT+2,N1+2*NG,N2+2*NG,N3+2*NG};
   int Jrad_starts[4] = {0,0,0,0};
@@ -249,7 +258,7 @@ void sync_mpi_boundaries_X3R(grid_prim_type Pr) {
     comm, &status);
 }
 
-#if RADIATION
+#if RADIATION || COOLING
 void reduce_radG_buf()
 {
   ZSLOOP(-NGR, N1+NGR-1, -NGR, N2+NGR-1, -NGR, N3+NGR-1) {
@@ -290,7 +299,9 @@ void sync_radG()
     radG_face_subtype[3], neighbors[1][1][2], 5, comm, &status);
   reduce_radG_buf();
 }
+#endif
 
+#if RADIATION
 void reduce_Jrad_buf()
 {
   for (int n = 0; n < MAXNSCATT+2; n++) {

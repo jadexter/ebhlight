@@ -13,7 +13,7 @@
  * https://www.visitusers.org/index.php?title=Using_XDMF_to_read_HDF5
  * And this was a particularly useful example:
  * https://stackoverflow.com/questions/36718593/describing-5-dimensional-hdf5-matrix-with-xdmf
- * 
+ *
  * Note that visit supports vectors and tensors... and in principle xdmf does too
  * however discussions online indicate that combining the two is dodgy,
  * so I treat everything as a scalar using hyperslabs
@@ -53,7 +53,7 @@ void write_xml_file(int dump_id, double t, const char vnams[NVAR][STRLEN])
   int full_dump = (dump_id % DTf == 0);
 
   fprintf(stdout, "XMF %s\n", name);
-  
+
   FILE *fp = fopen(name, "w");
 
   // header
@@ -103,14 +103,20 @@ void write_xml_file(int dump_id, double t, const char vnams[NVAR][STRLEN])
     {
       scalar_meta(fp, "Qvisc_e", dname, 32);
       scalar_meta(fp, "Qvisc_p", dname, 32);
-      #if RADIATION
+      #if RADIATION || COOLING
       {
 	scalar_meta(fp, "Qcoul", dname, 32);
       }
       #endif // RADIATION
+      #if COOLING
+      {
+        scalar_meta(fp, "Qcool", dname, 32);
+        scalar_meta(fp, "Tel_test", dname, 32);
+      }
+      #endif // COOLING
     }
     #endif // ELECTRONS
-    #if RADIATION
+    #if RADIATION // DO WE NEED COOLING?
     {
       scalar_meta(fp, "nph", dname, 32);
       fprintf(fp, "      <!-- Jrad -->\n");
@@ -120,7 +126,7 @@ void write_xml_file(int dump_id, double t, const char vnams[NVAR][STRLEN])
     }
     #endif // RADIATION
   }
-  
+
   // footer
   fprintf(fp, "    </Grid>\n");
   fprintf(fp, "  </Domain>\n");

@@ -102,7 +102,7 @@ void set_core_params()
   set_param("cour", &cour);
   set_param("gam", &gam);
 
-  #if RADIATION
+  #if RADIATION || COOLING
   #if METRIC == CARTESIAN
   set_param("L_unit", &L_unit);
   set_param("M_unit", &M_unit);
@@ -110,6 +110,14 @@ void set_core_params()
   set_param("mbh", &mbh);
   set_param("M_unit", &M_unit);
   #endif
+  #endif
+
+  #if COOLING
+  set_param("Tel_target", &Tel_target);
+  set_param("Tel_rslope", &Tel_rslope);
+  set_param("tcool0", &tcool0);
+  set_param("tcoolOmega0", &tcoolOmega0);
+  set_param("q_constant", &q_constant);
   #endif
 
   #if ELECTRONS
@@ -159,74 +167,74 @@ void read_params(char *pfname)
 {
   void *ptr;
 
-  FILE *fp = fopen(pfname, "r");                                                 
-  if (fp == NULL) {                                                              
-    fprintf(stderr, "Cannot open parameter file: %s\n", pfname);                 
-    exit(-1);                                                                    
-  }                                                                              
-                                                                                 
-  char line[STRLEN];                                                             
-  while (fgets(line, STRLEN, fp)) {                                              
-    // Ignore comments, newlines, and leading whitespace                         
-    if (line[0] == '#' || line[0] == '\n' || isspace(line[0]))                   
-      continue;                                                                  
-                                                                                 
-    // Is key in dictionary, and is variable empty?                              
-    char test[STRLEN], key[STRLEN];                                              
-    test[0] = '\0';                                                              
-    sscanf(line, "%*s %s %*s %s", key, test);                                    
-    char *word = test;                                                           
-    while(isspace(*word)) {                                                      
-      word++;                                                                    
-    }                                                                            
-    if (word[0] == '\0') {                                                       
-      continue;                                                                  
-    }                                                                            
-                                                                                 
-    // Read in parameter depending on datatype                                   
-    int req = 0;
-    char type[6];                                                                
-    strncpy(type, line, 5);                                                      
-    type[5] = 0;                                                                 
-    if (get_param(key, &ptr, &req)) {
-      if (!strncmp(type, "[int]", 5)) {                                          
-        int buf;                                                                 
-        sscanf(line, "%*s %s %*s %d", key, &buf);                                
-        *((int*)ptr) = buf;                                                      
-        nparamset++;                                                             
-        if (req == 0) noptparamset++;
-      } else if (!strncmp(type, "[dbl]", 5)) {                                   
-        double buf;                                                              
-        sscanf(line, "%*s %s %*s %lf", key, &buf);                               
-        *((double*)ptr) = buf;                                                   
-        nparamset++;                                                             
-        if (req == 0) noptparamset++;
-      } else if (!strncmp(type, "[str]", 5)) {                                   
-        char buf[STRLEN];                                                        
-        sscanf(line, "%*s %s %*s %s", key, buf);                                 
-        strcpy((char*)ptr, buf);                                                 
-        nparamset++;                                                             
-        if (req == 0) noptparamset++;
-      }                                                                          
-    }                                                                            
+  FILE *fp = fopen(pfname, "r");
+  if (fp == NULL) {
+    fprintf(stderr, "Cannot open parameter file: %s\n", pfname);
+    exit(-1);
   }
-                                                                                 
-  #if (METRIC == MKS || METRIC == MMKS) && RADIATION                                               
-  Mbh = mbh*MSUN;                                                                
-  #endif                                                                         
-  
+
+  char line[STRLEN];
+  while (fgets(line, STRLEN, fp)) {
+    // Ignore comments, newlines, and leading whitespace
+    if (line[0] == '#' || line[0] == '\n' || isspace(line[0]))
+      continue;
+
+    // Is key in dictionary, and is variable empty?
+    char test[STRLEN], key[STRLEN];
+    test[0] = '\0';
+    sscanf(line, "%*s %s %*s %s", key, test);
+    char *word = test;
+    while(isspace(*word)) {
+      word++;
+    }
+    if (word[0] == '\0') {
+      continue;
+    }
+
+    // Read in parameter depending on datatype
+    int req = 0;
+    char type[6];
+    strncpy(type, line, 5);
+    type[5] = 0;
+    if (get_param(key, &ptr, &req)) {
+      if (!strncmp(type, "[int]", 5)) {
+        int buf;
+        sscanf(line, "%*s %s %*s %d", key, &buf);
+        *((int*)ptr) = buf;
+        nparamset++;
+        if (req == 0) noptparamset++;
+      } else if (!strncmp(type, "[dbl]", 5)) {
+        double buf;
+        sscanf(line, "%*s %s %*s %lf", key, &buf);
+        *((double*)ptr) = buf;
+        nparamset++;
+        if (req == 0) noptparamset++;
+      } else if (!strncmp(type, "[str]", 5)) {
+        char buf[STRLEN];
+        sscanf(line, "%*s %s %*s %s", key, buf);
+        strcpy((char*)ptr, buf);
+        nparamset++;
+        if (req == 0) noptparamset++;
+      }
+    }
+  }
+
+  #if (METRIC == MKS || METRIC == MMKS) && (RADIATION || COOLING)
+  Mbh = mbh*MSUN;
+  #endif
+
   if (mpi_io_proc()) {
-    fprintf(stderr, "Found %i,%i (required,optional) parameters, looked for %i,%i.\n", 
+    fprintf(stderr, "Found %i,%i (required,optional) parameters, looked for %i,%i.\n",
           nparamset-noptparamset, noptparamset, nparam-noptparam, noptparam);
     if (nparamset-noptparamset != nparam-noptparam && mpi_io_proc()) {
       fprintf(stderr, "! Incorrect number of required parameters set. Exiting.\n");
       exit(-1);
     }
-  }                                                                              
-                                                                                 
-  fclose(fp);                                                                    
-                                                                                 
-  if (mpi_io_proc()) fprintf(stdout, "Parameter file read.\n\n"); 
+  }
+
+  fclose(fp);
+
+  if (mpi_io_proc()) fprintf(stdout, "Parameter file read.\n\n");
 }
 
 void init_params(char *pfname)
@@ -235,4 +243,3 @@ void init_params(char *pfname)
   set_problem_params();
   read_params(pfname);
 }
-

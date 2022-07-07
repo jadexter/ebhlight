@@ -14,34 +14,20 @@
 #                                                                              #
 ################################################################################
 
-import util
-import sys
 import os
-
-# module load gcc/4.9.3
-# module load openmpi/1.10.0-gcc_4.9.3
-
-# gsl must be installed by hand to
-# ~/local/gcc/gsl
-
-# hdf5-parallel must be installed by hand to
-# ~/local/gcc/hdf5-parallel
-
-flags_base = '-Xpreprocessor -fopenmp -I/usr/local/opt/llvm/include -I/usr/local/include -L/usr/local/lib -L/usr/local/opt/llvm/lib -lomp '
 
 def matches_host():
   host = os.uname()[1]
-  return 'Jason' in host
+  return host == 'abnermal'
 
 def get_options():
   host = {}
 
-#  local_root = os.path.join(os.environ['HOME'],'local','gcc')
   host['NAME']           = os.uname()[1]
   host['COMPILER']       = 'h5pcc'
-  host['COMPILER_FLAGS'] = flags_base + ' ' + '-O3 -march=native'
-  host['DEBUG_FLAGS']    = flags_base + ' ' + '-g -O0'
-  host['GSL_DIR']        = '/usr/local/'
-  host['EXECUTABLE']     = 'mpirun'
+  host['COMPILER_FLAGS'] = '-O3 -Werror -fopenmp'
+  host['DEBUG_FLAGS']    = '-g -O0 -Wall -fopenmp'
+  host['GSL_DIR']        = '/usr/'
+  host['EXECUTABLE']     = ''
 
   return host

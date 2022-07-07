@@ -19,18 +19,21 @@ grid_int_type fail_save;
 grid_prim_type Psave;
 grid_fourvector_type jcon;
 #if RADIATION
-grid_fourvector_type radG; // Radiation four-force
-grid_fourvector_type radG_prev; // Radiation four-force
-grid_fourvector_type radG_buf;
-grid_tensor_type Rmunu;
 grid_int_type Nsph;
 grid_double_type nph;
 struct of_photon **photon_lists;
 struct of_photon **photon_mpi_lists;
 double nuLnu[MAXNSCATT+1][NTH][NPHI][NU_BINS_SPEC];
+//double dOmega[N2+2*NG][N3+2*NG];
 double Jrad[MAXNSCATT+2][N1+2*NG][N2+2*NG][N3+2*NG];
 double Jrad_buf[MAXNSCATT+2][N1+2*NG][N2+2*NG][N3+2*NG];
 grid_int_type Nem, Nabs, Nsc;
+#endif
+#if RADIATION || COOLING
+grid_tensor_type Rmunu;
+grid_fourvector_type radG; // Radiation four-force
+grid_fourvector_type radG_prev; // Radiation four-force
+grid_fourvector_type radG_buf;
 grid_int_type Nsuper;
 grid_double_type Esuper;
 grid_prim_type psupersave;
@@ -38,10 +41,16 @@ grid_prim_type psupersave;
 #if ELECTRONS
 grid_double_type Qvisc_e, Qvisc_p, Qcoul;
 #endif // ELECTRONS
+#if COOLING
+grid_double_type Qcool;
+#if (TCOOL == 1) && (METRIC == MKS || METRIC == MMKS)
+double Kmu[4];
+#endif
+#endif //COOLING
 
 double conn[N1 + 2*NG][N2 + 2*NG][NDIM][NDIM][NDIM];
 struct of_geom ggeom[N1+2*NG][N2+2*NG][NPG] ;
-#if RADIATION
+#if RADIATION || COOLING
 double dt_light[N1+2*NG][N2+2*NG], dt_light_min;
 #endif
 
@@ -58,9 +67,16 @@ double gam;
 double M_unit;
 double Reh;
 double Risco;
-#if RADIATION
+#if COOLING
+double Tel_target;
+double Tel_rslope;
+#endif
+#if RADIATION || COOLING
 double mbh, Mbh, L_unit, T_unit, M_unit, RHO_unit, U_unit, B_unit;
-double Ne_unit, Thetae_unit, kphys_to_num;
+double Ne_unit, Thetae_unit;
+#endif
+#if RADIATION
+double kphys_to_num;
 double tp_over_te, thetae_max, sigma_max, kdotk_tol;
 #endif
 
@@ -124,6 +140,11 @@ double game, gamp;
 double fel0;
 #endif
 
+#if COOLING
+double tcool0;
+double tcoolOmega0;
+double q_constant;
+#endif
+
 int global_start[NDIM];
 int global_stop[NDIM];
-
