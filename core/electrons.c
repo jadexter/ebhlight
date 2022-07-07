@@ -394,6 +394,7 @@ double get_tcool(int i, double r){
   return tcool;
   #endif
 
+  // More TCOOL options
   #if TCOOL == 2
   // Set tcool = A(r-rEH)^p + B
   double p = 1.5; // chosen to imitate 1/Omega dependence
