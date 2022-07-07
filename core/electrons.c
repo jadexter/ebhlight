@@ -411,7 +411,7 @@ double get_tcool(int i, double r){
   double Omega0 = 1.0/(pow(Risco, 3./2.) + a); // Omega at the ISCO
   double A = (1.0/Omega0 - B)/(pow(Risco, p) - pow(Reh, p));
   double tcool = A*(pow(r, p) - pow(Reh, p)) + B;
-  // if ( r > Risco){
+  // if ( r > Risco)
   return tcool;
 #endif
 }

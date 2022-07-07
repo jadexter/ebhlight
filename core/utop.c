@@ -18,13 +18,13 @@ int Utoprim(double U[NVAR], struct of_geom *geom, double prim[NVAR])
   int iter, eflag;
   double Bcon[NDIM], Bcov[NDIM], Qcov[NDIM], Qcon[NDIM], ncov[NDIM], ncon[NDIM],
     Qtcon[NDIM];
-  double lapse, Bsq, D, Ep, QdB, Qtsq, Qsq, Qdotn, rho0, u, gamma, Wp, Wp1, W, 
+  double lapse, Bsq, D, Ep, QdB, Qtsq, Qsq, Qdotn, rho0, u, gamma, Wp, Wp1, W,
     w, P, err, err1, dW;
   double Pressure_rho0_u(double rho0, double u);
   double Pressure_rho0_w(double rho0, double w);
-  double err_eqn(double Bsq, double D, double Ep, double QdB, double Qtsq, 
+  double err_eqn(double Bsq, double D, double Ep, double QdB, double Qtsq,
     double Wp, int *eflag);
-  double gamma_func(double Bsq, double D, double QdB, double Qtsq, double Wp, 
+  double gamma_func(double Bsq, double D, double QdB, double Qtsq, double Wp,
     int *eflag);
   double Wp_func(double *prim, struct of_geom *geom, int *eflag);
 
@@ -77,7 +77,7 @@ int Utoprim(double U[NVAR], struct of_geom *geom, double prim[NVAR])
   // Numerical rootfinding
   // Take guesses from primitives.
   Wp = Wp_func(prim, geom, &eflag);
-  if (eflag) 
+  if (eflag)
     return(eflag);
 
   double dedW, dedW2, f, errp, errm, Wpm, Wpp, h;
@@ -113,14 +113,14 @@ int Utoprim(double U[NVAR], struct of_geom *geom, double prim[NVAR])
     // times the current value
     Wp += MY_MAX( MY_MIN(dW, 2.0*Wp), -0.5*Wp);
 
-    if (fabs(dW/Wp) < ERRTOL) 
+    if (fabs(dW/Wp) < ERRTOL)
       break;
 
     err = err_eqn(Bsq, D, Ep, QdB, Qtsq, Wp, &eflag);
   }
 
   // Failure to converge; do not set primitives other than B
-  if(iter == ITERMAX) 
+  if(iter == ITERMAX)
     return(1);
 
   // Find utsq, gamma, rho0 from Wp
@@ -147,7 +147,7 @@ int Utoprim(double U[NVAR], struct of_geom *geom, double prim[NVAR])
   prim[RHO] = rho0;
   prim[UU] = u;
 
-  // Find u(tilde); Eqn. 31 of Noble et al.
+  // Find u(tilde); Eqn. 31 of Noble, et al. 2006
   prim[U1] = (gamma/(W + Bsq))*(Qtcon[1] + QdB*Bcon[1]/W) ;
   prim[U2] = (gamma/(W + Bsq))*(Qtcon[2] + QdB*Bcon[2]/W) ;
   prim[U3] = (gamma/(W + Bsq))*(Qtcon[3] + QdB*Bcon[3]/W) ;
@@ -215,8 +215,8 @@ double Wp_func(double *prim, struct of_geom *geom, int *eflag)
   utcon[3] = prim[U3];
 
   lower(utcon, geom->gcov, utcov) ;
-  utsq = 0.; 
-  for (int i = 0; i < NDIM; i++) 
+  utsq = 0.;
+  for (int i = 0; i < NDIM; i++)
     utsq += utcon[i]*utcov[i];
 
   // Catch utsq < 0
@@ -245,4 +245,3 @@ double Pressure_rho0_w(double rho0, double w)
 {
   return ((w - rho0)*(gam - 1.)/gam);
 }
-
