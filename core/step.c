@@ -26,7 +26,7 @@ void step()
   // Need both P_n and P_n+1 to calculate current
   ZSLOOP(-NG,N1-1+NG,-NG,N2-1+NG,-NG,N3-1+NG) {
     #ifdef CONST_INJECTION
-      inject_nonthermal(P[i][j][k], 1e5, dt);
+      inject_nonthermal(P[i][j][k], CONST_INJECTION, dt);
     #endif
     
     PLOOP {

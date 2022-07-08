@@ -147,6 +147,11 @@ def load_hdr(fname):
         th1 = np.pi/nth*(i + 1)
         hdr['dOmega'][i,j] = 2*np.pi/nphi*(np.cos(th0) - np.cos(th1))
 
+  if hdr['NONTHERMAL']:
+    hdr['ginjmax'] = read_scalar(dfile, '/header/gamma_inj_max')
+    hdr['ginjmin'] = read_scalar(dfile, '/header/gamma_inj_min')
+    hdr['plaw'] = read_scalar(dfile, '/header/problem/plaw')
+
   hdr['DTd'] = read_scalar(dfile, 'dump_cadence')
   hdr['DTf'] = read_scalar(dfile, 'full_dump_cadence')/hdr['DTd']
 

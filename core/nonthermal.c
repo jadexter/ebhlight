@@ -8,10 +8,6 @@
 
 #include "decs.h"
 
-#define SYNCHROTRON (1)
-#define BREMSSTRAHLUNG (0)
-#define INVERSE_COMPTON (0)
-
 #if NONTHERMAL
 void nonthermal_adiab(grid_prim_type Pi, grid_prim_type Pf, double Dt){
     // I worry since the expasion depends on the primitive left and right values that the values may be overwritten as the expansion is calculated...
@@ -146,7 +142,7 @@ void nonthermal_adiab_zone(int i, int j, int k, grid_prim_type Pi, grid_prim_typ
     // Expanding
     if(adiab > 0){
         ncool = -deltan[0];
-        qcool = deltan*ME*(nteGammas[0]-1);
+        qcool = ncool*ME*(nteGammas[0]-1);
     }
     // Compressing, small amount can escape out the top
     else{
@@ -373,10 +369,13 @@ void calc_gdot_rad(double *Pr, struct of_geom *geom, double *gdot)
     get_state(Pr, geom, &q);
     
     #if SYNCHROTRON
+    #ifdef ART_SYNCH
+    Bsq = pow(ART_SYNCH,2.);
+    #else
     Bsq = calc_bsq_cgs(Pr, geom);
+    #endif
 
     //I'm temporarily hard coding in a constant B field to test
-    Bsq = pow(200.,2.);
 
     NTEGAMMALOOP gdot[ig] += (-1.292e-11)*Bsq*pow(nteGammas[ig],2); // Eq. 31 Chael + 17 
     #endif
@@ -486,7 +485,7 @@ void apply_thermal_heating(double *Pr, struct of_state q, double heat, double Dt
     ue_f += heat*Dt/q.ucon[0];
 
     // Update electron entropy
-    Pf[KEL] = (game-1.)*ue_f*pow(Pr[RHO],-game);
+    Pr[KEL] = (game-1.)*ue_f*pow(Pr[RHO],-game);
 }
 
 double calc_potential(double *Pr){
