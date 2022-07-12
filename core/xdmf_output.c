@@ -111,6 +111,7 @@ void write_xml_file(int dump_id, double t, const char vnams[NVAR][STRLEN])
       #if COOLING
       {
         scalar_meta(fp, "Qcool", dname, 32);
+        scalar_meta(fp, "Tcool", dname, 32);
         scalar_meta(fp, "Tel_test", dname, 32);
       }
       #endif // COOLING

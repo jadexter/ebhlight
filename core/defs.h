@@ -43,6 +43,7 @@ grid_double_type Qvisc_e, Qvisc_p, Qcoul;
 #endif // ELECTRONS
 #if COOLING
 grid_double_type Qcool;
+grid_double_type Tcool;
 #if (TCOOL == 1) && (METRIC == MKS || METRIC == MMKS)
 double Kmu[4];
 #endif
