@@ -312,6 +312,8 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   sigma = bsq/Ph[RHO];
 
   double tcool = get_tcool(i, r);
+  // AMH added output of tcool
+  Tcool[i][j][k] = tcool;
 
   uel = 1./(game-1.)*Ph[KEL]*pow(Ph[RHO],game);
   // Calculate current electron temperature...

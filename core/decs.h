@@ -225,6 +225,7 @@ extern grid_double_type Qvisc_e, Qvisc_p, Qcoul;
 #endif // ELECTRONS
 #if COOLING
 extern grid_double_type Qcool;
+extern grid_double_type Tcool;
 #if (TCOOL == 1) && (METRIC == MKS || METRIC == MMKS)
 extern double Kmu[4];
 #endif
