@@ -352,6 +352,9 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   // AMH added output of L
   Qcool[i][j][k] = L;
 
+  // Test 2022-07-18: convert Qcool to coordinate frame instead of fluid frame
+  L = L*ggeom[i][j][CENT].alpha*q.ucon[0];
+
   // Implement cooling as a passive sink in local energy conservation (Gcov)
   // update radG, the radiation four-force density (Ryan+ 2015 Eq. 4)
   for (int mu = 0; mu < NDIM; mu++) {
@@ -477,7 +480,7 @@ void apply_rad_force_e(grid_prim_type Prh, grid_prim_type Pr,
     Pr[i][j][k][KTOT] = (gam-1.)*Pr[i][j][k][UU]*pow(Pr[i][j][k][RHO],-gam);
   } // ZSLOOP
 }
-#endif // RADIATION
+#endif // RADIATION || COOLING
 
 void fixup_electrons(grid_prim_type P)
 {
