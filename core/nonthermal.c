@@ -11,6 +11,15 @@
 #if NONTHERMAL
 void nonthermal_adiab(grid_prim_type Pi, grid_prim_type Pf, double Dt){
     // I worry since the expasion depends on the primitive left and right values that the values may be overwritten as the expansion is calculated...
+    #ifdef SEMIART_ADIAB
+        double X[NDIM];
+        ZLOOPALL{
+            coord(i, j, k, CENT, X);
+            Pf[U1] = X[1]*SEMIART_ADIAB/3;
+            Pf[U2] = X[2]*SEMIART_ADIAB/3;
+            Pf[U3] = X[3]*SEMIART_ADIAB/3;
+        }
+    #endif 
     #pragma omp parallel for collapse(3) schedule(dynamic)
     ZLOOP {
       nonthermal_adiab_zone(i, j, k, Pi, Pf, Dt);
@@ -80,7 +89,9 @@ void nonthermal_adiab_zone(int i, int j, int k, grid_prim_type Pi, grid_prim_typ
     // TODO: Viscous dissipation rate and injection terms into thermal and nonthermal pops (Chael section 3.2 iii and eq. 26/29)
 
     double adiab = calc_expansion(i,j,k,Pi,Pf,Dt);
-    adiab = -5e-3;
+    #ifdef ART_ADIAB
+    adiab = ART_ADIAB;
+    #endif
     double nprime[NTEBINS], deltan[NTEBINS], ngamma[NTEBINS];
 
     NTEGAMMALOOP ngamma[ig] = Pf[i][j][k][ig+NTESTART];

@@ -292,7 +292,11 @@ double f (double x, void *microphysics) {
   }
 }
 
-// Calculate number of superphotons to produce per thread in each zone
+/**
+ * @brief Calculate number of superphotons to produce per thread in each zone and set dnzs[][]
+ *  
+ * @param Prad grid_prim_type primitives
+ */
 void get_dnz(grid_prim_type Prad)
 {
   #pragma omp parallel
