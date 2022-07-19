@@ -351,10 +351,13 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   }
 
 
+  // Test 2022-07-18: convert Qcool to observer frame instead of fluid frame
+  // L = L*ggeom[i][j][CENT].alpha*q.ucon[0];
   // Test 2022-07-18: convert Qcool to coordinate frame instead of fluid frame
-  // NOTE: make sure pull the part restricting L>0...
-  L = L*ggeom[i][j][CENT].alpha*q.ucon[0];
-  
+  // L = L/ggeom[i][j][CENT].alpha;
+  // Test 2022-07-18: not sure which frame is which yet.
+  L = L*q.ucon[0];
+
   if (L < 0.0){
     L = 0.0;
   }
