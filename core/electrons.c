@@ -448,6 +448,7 @@ void apply_rad_force_e(grid_prim_type Prh, grid_prim_type Pr,
     // Get fluid state at n + 1/2 where radiation four-force is centered
     get_state(Prh[i][j][k], geom, &q);
 
+    // C = -u^\mu G_\mu
     for (int mu = 0; mu < NDIM; mu++) {
       C += -q.ucon[mu]*radG[i][j][k][mu];
     }
@@ -459,8 +460,10 @@ void apply_rad_force_e(grid_prim_type Prh, grid_prim_type Pr,
     C = C/geom->g;
 
     Urho = Pr[i][j][k][RHO]*q.ucon[0];
+    // Uel = U_{\kappa_e} defined in Ressler+ 2015 under eq. 22.
     Uel = Pr[i][j][k][KEL]*Urho;
 
+    // As in Ressler+ 2015 eq. 21, 22
     Uel += Dt*(C*(game-1.)*pow(Prh[i][j][k][RHO],1.-game));
 
     // Supercooling diagnostics

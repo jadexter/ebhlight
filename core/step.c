@@ -76,8 +76,7 @@ void step()
   #endif
   bound_prim(P);
 
-  #if RADIATION || COOLING
-
+  #if RADIATION
   // Apply radiation four-force to fluid
   apply_rad_force(P, dt);
   fixup(P);
@@ -91,6 +90,17 @@ void step()
   memset((void*)&radG[0][0][0][0], 0,
     (N1+2*NG)*(N2+2*NG)*(N3+2*NG)*NDIM*sizeof(double));
   #endif // RADIATION
+
+  // AMH test: try not cooling entire fluid. Need to check if that makes sense.
+  #if COOLING && ELECTRONS
+  apply_rad_force_e(Ph, P, radG, dt);
+  fixup_electrons(P);
+  bound_prim(P);
+
+  memset((void*)&radG[0][0][0][0], 0,
+         (N1+2*NG)*(N2+2*NG)*(N3+2*NG)*NDIM*sizeof(double));
+  #endif
+
 
   // Increment time
   t += dt;
