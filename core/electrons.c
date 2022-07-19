@@ -334,8 +334,8 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   L = 0.;
   //limit Y for now and don't cool sigma > 1
   Y = MY_MIN(Y, 1000.);
-  // if ((!isnan(Tel)) && (Y > 0.) && (uel > 0.) && (Tel > 0.) && (sigma < 1.)) {
-  if ((!isnan(Tel)) && (Y > 0.) && (uel > 0.) && (Tel > 0.)) {
+  if ((!isnan(Tel)) && (Y > 0.) && (uel > 0.) && (Tel > 0.) && (tcool > 0.0) && (sigma < 1.)) {
+  // if ((!isnan(Tel)) && (Y > 0.) && (uel > 0.) && (Tel > 0.)) {
     // this should cool the *electrons* e.g. cooling rate set by their uel not UU
     L = 2.*uel*pow(Y, q_constant)/tcool;
   }
@@ -347,6 +347,10 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
     fprintf(stderr,"[%i][istart=%i][%i %i %i] supercooling! Y, uel, L: %g %g %g\n",
             mpi_myrank(), global_start[1], i, j, k, Y, uel, L);
     fprintf(stderr, "coords: %g %g %g %g \n",X[0],X[1],r,th);
+    L = 0.0;
+  }
+
+  if (L < 0.0){
     L = 0.0;
   }
   // AMH added output of L
