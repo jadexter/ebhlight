@@ -179,7 +179,7 @@ double advance(grid_prim_type Pi, grid_prim_type Pb, double Dt,
 #if RADIATION || COOLING // COOLING HERE I THINK?
 void apply_rad_force(grid_prim_type Pr, double Dt)
 {
-  double U[NVAR];
+  double U[NVAR]; // Holds fluxes
   struct of_state q;
 
   timer_start(TIMER_UPDATE);
@@ -192,6 +192,9 @@ void apply_rad_force(grid_prim_type Pr, double Dt)
     get_state(Pr[i][j][k], &(ggeom[i][j][CENT]), &q);
     primtoflux(Pr[i][j][k], &q, 0, &(ggeom[i][j][CENT]), U);
 
+    // AMH notes:
+    // increases fluxes by Dt*radG, so radG is definitely in coord frame
+    // Ryan+ 2015 Eq. 50
     for (int ip = 1; ip < 5; ip++) {
       U[ip] += Dt*radG[i][j][k][ip-1];
       radG_prev[i][j][k][ip-1] = radG[i][j][k][ip-1];

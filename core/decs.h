@@ -200,7 +200,7 @@ extern grid_prim_type Psave;       // Half-step primitives
 extern grid_int_type pflag;     // Failure points
 extern grid_int_type fail_save;
 extern grid_fourvector_type jcon;
-#if RADIATION | COOLING
+#if RADIATION || COOLING
 extern grid_fourvector_type radG; // Radiation four-force
 extern grid_fourvector_type radG_prev; // Radiation four-force
 extern grid_fourvector_type radG_buf;

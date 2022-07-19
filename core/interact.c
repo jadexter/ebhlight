@@ -12,7 +12,7 @@
 grid_fourvector_type Ucon_grid, Ucov_grid, Bcon_grid, Bcov_grid;
 struct of_microphysics m_grid[N1+2*NG][N2+2*NG][N3+2*NG];
 
-void get_fluid_zone_grid(int i, int j, int k, struct of_microphysics *m, 
+void get_fluid_zone_grid(int i, int j, int k, struct of_microphysics *m,
   double Ucon[NDIM], double Ucov[NDIM], double Bcon[NDIM], double Bcov[NDIM])
 {
   m->Thetae = m_grid[i][j][k].Thetae;
@@ -51,12 +51,12 @@ double get_scatt_bias(double nu, const struct of_microphysics *m, double uph)
 #define MAX_INTERACTIONS 100
 void interact(grid_prim_type P, double t, double dt)
 {
-  timer_start(TIMER_INTERACT);  
+  timer_start(TIMER_INTERACT);
 
   // Set Ucon, Ucov, Bcon, Bcov, m for each zone
   #pragma omp parallel for collapse(2)
   ZLOOPALL {
-    get_fluid_zone(i, j, k, P, &m_grid[i][j][k], Ucon_grid[i][j][k], 
+    get_fluid_zone(i, j, k, P, &m_grid[i][j][k], Ucon_grid[i][j][k],
     Ucov_grid[i][j][k], Bcon_grid[i][j][k], Bcov_grid[i][j][k]);
   }
 
@@ -102,9 +102,9 @@ void interact(grid_prim_type P, double t, double dt)
           ph = ph->next;
           break;
         }
-        
+
         dlam = dtint/Kcon[0];
-        
+
         Xtoijk(X, &i, &j, &k);
 
         if (i < 0 || i > N1+2*NG-1 ||
@@ -127,7 +127,7 @@ void interact(grid_prim_type P, double t, double dt)
           ph = ph->next;
           break;
         }
-        
+
         double sigma = pow(m.B/B_unit,2.)/(m.Ne/Ne_unit);
         if (sigma > sigma_max) {
           prev = ph;
@@ -140,9 +140,9 @@ void interact(grid_prim_type P, double t, double dt)
         if (nu <= 0 || isnan(nu)) {
           fprintf(stderr, "Bad NU in interact [%i %i %i]\n", i, j, k);
           fprintf(stderr, "X[] = %e %e %e %e\n", X[0], X[1], X[2], X[3]);
-          fprintf(stderr, "Kcov[] = %e %e %e %e\n", 
+          fprintf(stderr, "Kcov[] = %e %e %e %e\n",
             Kcov[0], Kcov[1], Kcov[2], Kcov[3]);
-          fprintf(stderr, "Ucon[] = %e %e %e %e\n", 
+          fprintf(stderr, "Ucon[] = %e %e %e %e\n",
             Ucon[0], Ucon[1], Ucon[2], Ucon[3]);
           double gamma;
           mhd_gamma_calc(P[i][j][k], &(ggeom[i][j][CENT]), &gamma);
@@ -159,7 +159,7 @@ void interact(grid_prim_type P, double t, double dt)
 
         #if SCATTERING
         dtau_scatt = (HPL*L_unit/(ME*CL*CL))*dlam*alpha_inv_scatt(nu, &m);
-        bias_scatt = get_scatt_bias(nu, &m, 
+        bias_scatt = get_scatt_bias(nu, &m,
           HPL*nu*ph->w/(ggeom[i][j][CENT].g*d3x*pow(L_unit,3)));
         #endif
 
@@ -209,11 +209,13 @@ void interact(grid_prim_type P, double t, double dt)
 
           double Gcov[NDIM];
           for (int mu = 0; mu < NDIM; mu++) {
+            // AMH notes: Ryan+ 2015 eq. 49
             Gcov[mu] = 1./(ggeom[i][j][CENT].g*dt*d3x)*ph->w*kphys_to_num*Kcov[mu];
+            // AMH notes: Ryan+ 2015 eq. 50
             #pragma omp atomic
             radG[i][j][k][mu] += Gcov[mu]*ggeom[i][j][CENT].g;
           }
-          
+
           // du_e / dtau
           #pragma omp atomic
           Jrad[1][i][j][k] += dot(Ucon_grid[i][j][k], Gcov);
@@ -263,7 +265,7 @@ void interact(grid_prim_type P, double t, double dt)
               phscatt->Kcov[n][mu] = 0.;
               phscatt->Kcon[n][mu] = 0.;
             }
-          } 
+          }
           phscatt->X[0][0] = -1.;
           phscatt->X[1][0] = -1.;
           phscatt->t0 = tscatt;
@@ -303,12 +305,12 @@ void interact(grid_prim_type P, double t, double dt)
             #pragma omp atomic
             radG[i][j][k][mu] += Gcov[mu]*ggeom[i][j][CENT].g;
           }
-          
+
           // du_e / dtau
           int nscatt = MY_MIN(ph->nscatt, MAXNSCATT - 1);
           #pragma omp atomic
           Jrad[nscatt+2][i][j][k] += dot(Ucon_grid[i][j][k], Gcov);
-          
+
           //push phscatt as far as possible
           status = push_superphoton(phscatt, cour*dt_light[i][j]);
           if (status == PUSH_FAIL) {
@@ -348,4 +350,3 @@ void interact(grid_prim_type P, double t, double dt)
   timer_stop(TIMER_INTERACT);
 }
 #endif // RADIATION
-

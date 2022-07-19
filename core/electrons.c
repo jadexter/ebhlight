@@ -272,6 +272,11 @@ void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
       get_state(Ps[i][j][k], geom, &q);
 
       double ue_f = Pf[i][j][k][KEL]*pow(Pf[i][j][k][RHO],game)/(game-1.);
+      // AMH notes:
+      // Qc is in the frame comoving with the fluid, ie per proper fluid time tau.
+      // but ue is in the coordinate frame, so we need to multiply Qc:
+      // Energy exchanged/unit coordinate time = energy exchanged/unit fluid proper time *
+      // dtau/dt. dtau/dt = 1/u^0 by definition of u^0 = dt/dtau.
       ue_f += Qc*Dt/q.ucon[0];
 
       // Record diagnostic (du_e / dtau)
@@ -350,23 +355,32 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
     L = 0.0;
   }
 
-
   // Test 2022-07-18: convert Qcool to observer frame instead of fluid frame
   // L = L*ggeom[i][j][CENT].alpha*q.ucon[0];
   // Test 2022-07-18: convert Qcool to coordinate frame instead of fluid frame
   // L = L/ggeom[i][j][CENT].alpha;
   // Test 2022-07-18: not sure which frame is which yet.
-  L = L*q.ucon[0];
+  // L = L*q.ucon[0];
 
   if (L < 0.0){
     L = 0.0;
   }
 
-  // AMH added output of L
+  // AMH added output of L.
+  // We definitely want to output L in the fluid frame to compare
+  // with Qc and Qvisc, which are also in the fluid frame.
   Qcool[i][j][k] = L;
 
+  // AMH notes
   // Implement cooling as a passive sink in local energy conservation (Gcov)
   // update radG, the radiation four-force density (Ryan+ 2015 Eq. 4)
+  // According to Noble+ 2009, L is the energy radiated
+  // per proper time in the FLUID frame (eq. 13).
+  // Then multiplying L by -u_\nu gives the amount of radiated energy-mom
+  // per unit 4-volume in the COORDINATE frame (eq. 12).
+  // Now the question is: does ebhlight expect radG to be in the coord frame
+  // or the fluid frame? Or the ZAMO frame?
+  // I'm pretty sure Gcov = G_\mu is in coord frame.
   for (int mu = 0; mu < NDIM; mu++) {
     Gcov[mu] = -L*q.ucov[mu]; // Noble+ 2009 Eqns. 12-13
     radG[i][j][k][mu] = Gcov[mu]*ggeom[i][j][CENT].g;
@@ -433,6 +447,7 @@ double get_tcool(int i, double r){
 }
 #endif // COOLING
 
+// AMH notes: compare to step.c's total fluid apply_rad_force
 void apply_rad_force_e(grid_prim_type Prh, grid_prim_type Pr,
   grid_fourvector_type radG, double Dt)
 {
@@ -448,7 +463,10 @@ void apply_rad_force_e(grid_prim_type Prh, grid_prim_type Pr,
     // Get fluid state at n + 1/2 where radiation four-force is centered
     get_state(Prh[i][j][k], geom, &q);
 
-    // C = -u^\mu G_\mu
+    // AMH notes: C = -u^\mu G_\mu
+    // radG input is in the coordinate frame
+    // so summing over -u^\mu gives the total energy
+    // radiated in the fluid frame.
     for (int mu = 0; mu < NDIM; mu++) {
       C += -q.ucon[mu]*radG[i][j][k][mu];
     }
@@ -460,7 +478,10 @@ void apply_rad_force_e(grid_prim_type Prh, grid_prim_type Pr,
     C = C/geom->g;
 
     Urho = Pr[i][j][k][RHO]*q.ucon[0];
+    // AMH notes:
     // Uel = U_{\kappa_e} defined in Ressler+ 2015 under eq. 22.
+    // Except where is the sqrt(-g)? Maybe not important for kerr
+    // which always has g=-1.
     Uel = Pr[i][j][k][KEL]*Urho;
 
     // As in Ressler+ 2015 eq. 21, 22

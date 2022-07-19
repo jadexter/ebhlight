@@ -26,7 +26,7 @@ void reset_dump_variables()
   memset(Nabs, 0, (N1+2*NG)*(N2+2*NG)*(N3+2*NG)*sizeof(int));
   memset(Nsc, 0, (N1+2*NG)*(N2+2*NG)*(N3+2*NG)*sizeof(int));
   #endif
-  #if RADIATION | COOLING
+  #if RADIATION || COOLING
   memset(Esuper, 0, (N1+2*NG)*(N2+2*NG)*(N3+2*NG)*sizeof(double));
   memset(Nsuper, 0, (N1+2*NG)*(N2+2*NG)*(N3+2*NG)*sizeof(int));
   #endif
@@ -42,7 +42,7 @@ void diag(int call_code)
   struct of_geom *geom;
   struct of_state q;
   static FILE *ener_file;
-  
+
   // Write diagnostics to dump directory
   char log_fnam[STRLEN];
   strcpy(log_fnam, dumpdir);
@@ -79,7 +79,7 @@ void diag(int call_code)
       rmed += U[RHO] * dV;
       pp += U[U3] * dV;
       e += U[UU] * dV;
-      
+
       divb = flux_ct_divb(i, j, k);
 
       // Don't count divbs at simulation volume boundaries, unless periodic
@@ -115,7 +115,7 @@ void diag(int call_code)
   #endif
   double Phi_proc = 0.;
   double jet_EM_flux_proc = 0.;
-  double lum_eht_proc = 0.; 
+  double lum_eht_proc = 0.;
   ZLOOP {
     struct of_state q;
     double U[NVAR];
@@ -181,7 +181,7 @@ void diag(int call_code)
   }
   double lum = mpi_reduce(lum_proc);
   double eff = lum/(mdot+SMALL);
-  
+
   #if ELECTRONS
   int num_super = 0.;
   double lum_super = 0.;
@@ -227,8 +227,8 @@ void diag(int call_code)
       printf("step_abs = %i step_abs_tot = %i\n", step_abs, step_abs_all);
       fprintf(ener_file, "%i %i %i %i %i %i %i %i ", step_made, step_abs,
         step_scatt, step_lost, step_rec, step_tot, step_sent, step_rcvd);
-      fprintf(ener_file, "%i %i %i %i %i %i %i %i %i ", step_made_all, 
-        step_abs_all, step_scatt_all, step_lost_all, step_rec_all, step_tot_all, 
+      fprintf(ener_file, "%i %i %i %i %i %i %i %i %i ", step_made_all,
+        step_abs_all, step_scatt_all, step_lost_all, step_rec_all, step_tot_all,
         step_sent_all, step_rcvd_all, step_fail_all);
       fprintf(ener_file, "%15.8g %15.8g ", tune_emiss, tune_scatt);
       fprintf(ener_file, "%15.8g %15.8g %15.8g ", erad, lum, eff);
@@ -238,11 +238,11 @@ void diag(int call_code)
       #endif
       fprintf(ener_file, "%15.8g ", lum_eht);
       fprintf(ener_file, "%15.8g %15.8g %15.8g ", mdot_eh_all, edot_eh_all, ldot_eh_all);
-      fprintf(ener_file, "%15.8g %15.8g %15.8g %15.8g %15.8g %15.8g %15.8g %15.8g %15.8g %15.8g ", 
+      fprintf(ener_file, "%15.8g %15.8g %15.8g %15.8g %15.8g %15.8g %15.8g %15.8g %15.8g %15.8g ",
         get_time_per_step(TIMER_UPDATE), get_time_per_step(TIMER_FLUXCALC),
         get_time_per_step(TIMER_FIXUP), get_time_per_step(TIMER_BOUND),
         get_time_per_step(TIMER_DIAG), get_time_per_step(TIMER_OUT),
-        get_time_per_step(TIMER_MAKE), get_time_per_step(TIMER_PUSH), 
+        get_time_per_step(TIMER_MAKE), get_time_per_step(TIMER_PUSH),
         get_time_per_step(TIMER_INTERACT), get_time_per_step(TIMER_ALL));
       #if ELECTRONS
       fprintf(ener_file, "%15.8g ", get_time_per_step(TIMER_ELECTRON));
@@ -396,4 +396,3 @@ void record_superphoton(double X[NDIM], struct of_photon *ph)
   }
 }
 #endif // RADIATION
-
