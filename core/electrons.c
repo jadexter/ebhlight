@@ -353,12 +353,13 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   if (L < 0.0){
     L = 0.0;
   }
-  // AMH added output of L
-  Qcool[i][j][k] = L;
 
   // Test 2022-07-18: convert Qcool to coordinate frame instead of fluid frame
   // NOTE: make sure pull the part restricting L>0...
   L = L*ggeom[i][j][CENT].alpha*q.ucon[0];
+
+  // AMH added output of L
+  Qcool[i][j][k] = L;
 
   // Implement cooling as a passive sink in local energy conservation (Gcov)
   // update radG, the radiation four-force density (Ryan+ 2015 Eq. 4)
