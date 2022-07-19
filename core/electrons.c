@@ -353,6 +353,7 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   Qcool[i][j][k] = L;
 
   // Test 2022-07-18: convert Qcool to coordinate frame instead of fluid frame
+  // NOTE: make sure pull the part restricting L>0...
   L = L*ggeom[i][j][CENT].alpha*q.ucon[0];
 
   // Implement cooling as a passive sink in local energy conservation (Gcov)
