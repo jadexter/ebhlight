@@ -318,6 +318,7 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
 
   double tcool = get_tcool(i, r);
   // AMH added output of tcool
+  // (will probably remove for production runs)
   Tcool[i][j][k] = tcool;
 
   uel = 1./(game-1.)*Ph[KEL]*pow(Ph[RHO],game);
@@ -326,7 +327,6 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   // mass density
   thetae = MP/ME*Ph[KEL]*pow(Ph[RHO],game-1.);
   Tel = thetae*ME*CL*CL/KBOL;
-  // Tel = (game-1.)*uel/Ph[RHO]; // JD way...missing MP/ME?
 
   // calculate cooling rate L following Noble+
   Tel_star = Tel_target*pow(r,-1.*Tel_rslope);
@@ -354,13 +354,6 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
     fprintf(stderr, "coords: %g %g %g %g \n",X[0],X[1],r,th);
     L = 0.0;
   }
-
-  // Test 2022-07-18: convert Qcool to observer frame instead of fluid frame
-  // L = L*ggeom[i][j][CENT].alpha*q.ucon[0];
-  // Test 2022-07-18: convert Qcool to coordinate frame instead of fluid frame
-  // L = L/ggeom[i][j][CENT].alpha;
-  // Test 2022-07-18: not sure which frame is which yet.
-  // L = L*q.ucon[0];
 
   if (L < 0.0){
     L = 0.0;
