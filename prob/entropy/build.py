@@ -24,6 +24,18 @@ bhl.config.set_cparm('OPENMP', False)
 # COORDINATES
 bhl.config.set_cparm('METRIC', 'MINKOWSKI')
 
+# ELECTRONS
+bhl.config.set_cparm('ELECTRONS', True)
+bhl.config.set_cparm('SUPPRESS_HIGHB_HEAT', False)
+bhl.config.set_cparm('BETA_HEAT', True)
+bhl.config.set_cparm('COULOMB', True)
+
+# NONTHERMAL
+# bhl.config.set_cparm('NONTHERMAL', True)
+# bhl.config.set_cparm('SYNCHROTRON', True)
+# bhl.config.set_cparm('BREMSSTRAHLUNG', True)
+# bhl.config.set_cparm('ADIABTIC_SCALING', True)
+
 # FLUID
 bhl.config.set_cparm('RECONSTRUCTION', 'LINEAR')
 bhl.config.set_cparm('X1L_GAS_BOUND', 'BC_PERIODIC')

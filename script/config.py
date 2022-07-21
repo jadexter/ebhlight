@@ -328,8 +328,8 @@ def build(PROBLEM, PATHS):
     set_rparm('tptemax', 'double', default = 1.e3)
   
   if util.parm_is_active(CPARMS, 'NONTHERMAL'):
-      set_rparm('gammainjmin', 'double', default = 500)
-      set_rparm('gammainjmax', 'double', default = 1e5)
+    set_rparm('gammainjmin', 'double', default = 500)
+    set_rparm('gammainjmax', 'double', default = 1e5)
 
   if util.parm_is_active(CPARMS, 'RADIATION'):
     if not util.parm_is_active(CPARMS, 'ELECTRONS'):

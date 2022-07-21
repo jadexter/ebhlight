@@ -44,7 +44,8 @@ def load_hdr(fname):
 
   hdr = {}
   if 'header/version' in dfile.keys():
-    hdr['VERSION'] = h5_to_str(read_scalar(dfile, 'header/version'))
+    #hdr['VERSION'] = h5_to_str(read_scalar(dfile, 'header/version'))
+    hdr['VERSION'] = read_scalar(dfile, 'header/version').decode()
   else:
     hdr['VERSION'] = None
   if hdr['VERSION'] not in supported_versions:

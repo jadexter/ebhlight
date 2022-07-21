@@ -38,13 +38,16 @@ void init_prob()
 
     PLOOP P[i][j][k][ip] = 0.;
 
-    P[i][j][k][RHO] = (X[1] < 0.5 || X[1] > 1.5) ? 1.0 : 0.125;
+    P[i][j][k][RHO] = 1.0;
 
-    double pgas = (X[1] < 0.5 || X[1] > 1.5) ? 1.0 : 0.1;
+    P[i][j][k][U1]  = (X[1] < 0.5) ? 1.0 : -1.0;
+
+    double pgas = 1.0;
     P[i][j][k][UU] = pgas/(gam - 1.);
 
-    #if NONTHERMAL
-    NTELOOP P[i][j][k][ip] = (X[1] < 0.5 || X[1] > 1.5) ? 1e-10 : 0.125e-10;
+    #if ELECTRONS
+    P[i][j][k][KTOT] = (gam-1.)*P[i][j][k][UU]/pow(P[i][j][k][RHO],gam);
+    P[i][j][k][KEL] = P[i][j][k][KTOT]/10.;
     #endif
   } // ZLOOP
 

@@ -19,7 +19,7 @@ bhl.config.set_cparm('OPENMP', True)
 bhl.config.set_cparm('METRIC', 'MKS')
 
 # ELECTRONS
-bhl.config.set_cparm('ELECTRONS', False)
+bhl.config.set_cparm('ELECTRONS', True)
 bhl.config.set_cparm('SUPPRESS_HIGHB_HEAT', False)
 bhl.config.set_cparm('BETA_HEAT', True)
 bhl.config.set_cparm('COULOMB', True)

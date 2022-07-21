@@ -98,6 +98,10 @@ void heat_electrons_zone(int i, int j, int k, double Pi[NVAR], double Ps[NVAR],
  */
 double get_fel(int i, int j, int k, double P[NVAR])
 {
+  #ifdef FEL
+  return FEL;
+  #endif
+
   #if BETA_HEAT == 0
   return fel0;
   #endif

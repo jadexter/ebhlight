@@ -11,9 +11,9 @@ PROB = 'nonthermal_basic'
 ### COMPILE TIME PARAMETERS ###
 
 # SPATIAL RESOLUTION AND MPI DECOMPOSITION
-bhl.config.set_cparm('N1TOT', 40)
-bhl.config.set_cparm('N2TOT', 1)
-bhl.config.set_cparm('N3TOT', 1)
+bhl.config.set_cparm('N1TOT', 10)
+bhl.config.set_cparm('N2TOT', 10)
+bhl.config.set_cparm('N3TOT', 10)
 bhl.config.set_cparm('N1CPU', 1)
 bhl.config.set_cparm('N2CPU', 1)
 bhl.config.set_cparm('N3CPU', 1)
@@ -33,7 +33,7 @@ bhl.config.set_cparm('COULOMB', True)
 # NONTHERMAL
 bhl.config.set_cparm('NONTHERMAL', True)
 bhl.config.set_cparm('SYNCHROTRON', True)
-bhl.config.set_cparm('BREMSSTRAHLUNG', False)
+bhl.config.set_cparm('BREMSSTRAHLUNG', True)
 bhl.config.set_cparm('ADIABTIC_SCALING', True)
 
 # FLUID
@@ -56,12 +56,12 @@ bhl.config.set_cparm('X3R_INFLOW', False)
 
 ### SYNCHROTRON/ADIABATIC PARAMS ###
 bhl.config.set_cparm('CONST_INJECTION', 1e5)
-bhl.config.set_cparm('SEMIART_ADIAB', -5e-3)
+bhl.config.set_cparm('ART_ADIAB', -5e-3)
 bhl.config.set_cparm('SKIP_VISCOUS', True)
 bhl.config.set_cparm('SKIP_COOLING', True)
 bhl.config.set_cparm('LOGDUMPING', True)
 
-bhl.config.set_rparm('tf', 'double', default = 10000)
+bhl.config.set_rparm('tf', 'double', default = 1000)
 bhl.config.set_rparm('dt', 'double', default = 0.0001)
 bhl.config.set_rparm('gam', 'double', default = 1.4)
 bhl.config.set_rparm('L_unit', 'double', default = 1.5032e6)

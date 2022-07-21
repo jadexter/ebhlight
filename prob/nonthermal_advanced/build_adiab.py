@@ -56,7 +56,7 @@ bhl.config.set_cparm('X3R_INFLOW', False)
 
 ### SYNCHROTRON/ADIABATIC PARAMS ###
 bhl.config.set_cparm('CONST_INJECTION', 1e5)
-bhl.config.set_cparm('ART_ADIAB', -5e-3)
+bhl.config.set_cparm('SEMIART_ADIAB', -5e-3)
 bhl.config.set_cparm('SKIP_VISCOUS', True)
 bhl.config.set_cparm('SKIP_COOLING', True)
 bhl.config.set_cparm('LOGDUMPING', True)

@@ -120,11 +120,11 @@
 #endif
 
 #if NONTHERMAL
-#ifndef NTEBINS
-#define NTEBINS (64) // Default bin number
-#endif
 #define NTESTART (NVAR_BASE + NVAR_EL)
 #define NVAR_NT (NTEBINS)
+  #ifndef NTEBINS
+  #define NTEBINS (64) // Default bin number
+  #endif
 #else
 #define NVAR_NT (0)
 #endif

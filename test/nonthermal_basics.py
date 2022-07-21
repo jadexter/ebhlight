@@ -199,6 +199,12 @@ plt.title('Synchrotron Cooling on a Flat, Static Background (p = 3.5)')
 
 plt.savefig('synchrotron.png', bbox_inches='tight')
 
+# Only run this mkdir piece the first time
+util.safe_remove('dump_storage')
+call(['mkdir', './dump_storage'])
+
+call(['mv', './' + TMP_DIR + '/dumps','./dump_storage'])
+call(['mv', './dump_storage/dumps', './dump_storage/synchrotron_dumps'])
 # CLEAN UP
 util.safe_remove(TMP_DIR)
 
@@ -264,6 +270,8 @@ plt.title('Adiabatic Compression on a Flat, Static Background with Scaling (p = 
 plt.savefig('adiabatic.png', bbox_inches='tight')
 
 # CLEAN UP
+call(['mv', './' + TMP_DIR + '/dumps','./dump_storage'])
+call(['mv', './dump_storage/dumps', './dump_storage/adiabatic_dumps'])
 util.safe_remove(TMP_DIR)
 
 
@@ -375,9 +383,12 @@ plt.savefig('fluxtest.png', bbox_inches='tight')
 
 
 # CLEAN UP
+call(['mv', './' + TMP_DIR + '/dumps','./dump_storage'])
+call(['mv', './dump_storage/dumps', './dump_storage/flux_dumps'])
+util.safe_remove(TMP_DIR)
+
 util.safe_remove('test_images')
 call(['mkdir', './test_images'])
 call(['mv', './synchrotron.png', './test_images'])
 call(['mv', './adiabatic.png',   './test_images'])
 call(['mv', './fluxtest.png',    './test_images'])
-util.safe_remove(TMP_DIR)

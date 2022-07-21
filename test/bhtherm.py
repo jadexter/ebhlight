@@ -124,5 +124,5 @@ ax.grid(True, linestyle='--')
 plt.savefig(PROBLEM + '.png', bbox_inches='tight')
 
 # CLEAN UP
-util.safe_remove(TMP_DIR)
+# util.safe_remove(TMP_DIR)
 

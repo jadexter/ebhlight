@@ -11,13 +11,16 @@
 #if NONTHERMAL
 void nonthermal_adiab(grid_prim_type Pi, grid_prim_type Pf, double Dt){
     // I worry since the expasion depends on the primitive left and right values that the values may be overwritten as the expansion is calculated...
+    // #ifdef ART_ADIAB
+    // #define SEMIART_ADIAB (ART_ADIAB)
+    // #endif
     #ifdef SEMIART_ADIAB
         double X[NDIM];
         ZLOOPALL{
             coord(i, j, k, CENT, X);
-            Pf[U1] = X[1]*SEMIART_ADIAB/3;
-            Pf[U2] = X[2]*SEMIART_ADIAB/3;
-            Pf[U3] = X[3]*SEMIART_ADIAB/3;
+            Pf[i][j][k][U1] = X[1]*SEMIART_ADIAB/3;
+            Pf[i][j][k][U2] = X[2]*SEMIART_ADIAB/3;
+            Pf[i][j][k][U3] = X[3]*SEMIART_ADIAB/3;
         }
     #endif 
     #pragma omp parallel for collapse(3) schedule(dynamic)
@@ -87,6 +90,9 @@ void nonthermal_adiab_zone(int i, int j, int k, grid_prim_type Pi, grid_prim_typ
     // TODO: Definitely needs testing...
     // TODO: Include the electrons returning to the thermal distribution (Chael section 3.2 ii)
     // TODO: Viscous dissipation rate and injection terms into thermal and nonthermal pops (Chael section 3.2 iii and eq. 26/29)
+    #ifndef ADIABTIC_SCALING
+    #define ADIABTIC_SCALING (0)
+    #endif
 
     double adiab = calc_expansion(i,j,k,Pi,Pf,Dt);
     #ifdef ART_ADIAB
@@ -109,9 +115,8 @@ void nonthermal_adiab_zone(int i, int j, int k, grid_prim_type Pi, grid_prim_typ
     get_state(Pf[i][j][k], geom, &q);
 
     double dtau = Dt/(q.ucon[0]);
-    
 
-    #ifdef ADIABTIC_SCALING
+    #if ADIABTIC_SCALING
         // Find change in n and the resulting real energy change (Chael eq. 47 and 11)
         double ureal[NTEBINS], utot, uexpected[NTEBINS], utotexpected;
     #endif
@@ -121,20 +126,20 @@ void nonthermal_adiab_zone(int i, int j, int k, grid_prim_type Pi, grid_prim_typ
         // deltan[ig] = dtau*(adiab/3.)*( (1+pow(nteGammas[ig],-2))*ngamma[ig] + (nteGammas[ig]-(1/nteGammas[ig]))*nprime[ig] );
         deltan[ig] = dtau*(adiab/3.)*nprime[ig];
 
-        #ifdef ADIABTIC_SCALING
+        #if ADIABTIC_SCALING
             uexpected[ig] = -1*dtau*ME*(adiab/3.)*(nteGammas[ig]-(1./nteGammas[ig]))*ngamma[ig];
             ureal[ig] = ME*(nteGammas[ig]-1.)*deltan[ig];
         #endif
     }
 
-    #ifdef ADIABTIC_SCALING
+    #if ADIABTIC_SCALING
         // Rescale change by expected vs actual energies to preserve energy
         utot = gamma_integral(ureal);
         utotexpected = gamma_integral(uexpected);
     #endif
 
     NTEGAMMALOOP{
-        #ifdef ADIABTIC_SCALING
+        #if ADIABTIC_SCALING
             if ((fabs(utotexpected) > SMALL) && (fabs(utot) > SMALL)) deltan[ig] *= utotexpected/utot;
         #endif
 
@@ -270,6 +275,8 @@ double calc_expansion(int i, int j, int k, grid_prim_type Pi, grid_prim_type Pf,
     ucon_calc(Pi[i][j][k], geomc, pucon);
     du[0] = ( (geomc->g)*(qc.ucon[0])-(geomc->g)*(pucon[0]) )/Dt;
 
+    du[0]=0; // Test if time dimension matters
+
 
     // Dimension 1:
     geoml = &ggeom[i-1][j][CENT];
@@ -281,7 +288,8 @@ double calc_expansion(int i, int j, int k, grid_prim_type Pi, grid_prim_type Pf,
     coord(i+1,j,k,CENT,Xr);
 
     // Could add the option later but I'll just do the center derivative for now
-    du[1] = ( (geomr->g)*(qr.ucon[1])-(geoml->g)*(ql.ucon[1]) )/(Xr[1]-Xl[1]);
+    // du[1] = ( (geomr->g)*(qr.ucon[1])-(geoml->g)*(ql.ucon[1]) )/(Xr[1]-Xl[1]);
+    du[1] = ( (geomr->g)*(qr.ucon[1])-(geomc->g)*(qc.ucon[1]) )/(Xr[1]-Xc[1]);
 
 
     // Dimension 2:
@@ -294,7 +302,8 @@ double calc_expansion(int i, int j, int k, grid_prim_type Pi, grid_prim_type Pf,
     coord(i,j+1,k,CENT,Xr);
 
     // Could add the option later but I'll just do the center derivative for now
-    du[2] = ( (geomr->g)*(qr.ucon[2])-(geoml->g)*(ql.ucon[2]) )/(Xr[2]-Xl[2]);
+    //du[2] = ( (geomr->g)*(qr.ucon[2])-(geoml->g)*(ql.ucon[2]) )/(Xr[2]-Xl[2]);
+    du[2] = ( (geomr->g)*(qr.ucon[2])-(geomc->g)*(qc.ucon[2]) )/(Xr[2]-Xc[2]);
 
 
     // Dimension 3:
@@ -307,7 +316,8 @@ double calc_expansion(int i, int j, int k, grid_prim_type Pi, grid_prim_type Pf,
     coord(i,j,k+1,CENT,Xr);
 
     // Could add the option later but I'll just do the center derivative for now
-    du[3] = ( (geomr->g)*(qr.ucon[3])-(geoml->g)*(ql.ucon[3]) )/(Xr[3]-Xl[3]);
+    //du[3] = ( (geomr->g)*(qr.ucon[3])-(geoml->g)*(ql.ucon[3]) )/(Xr[3]-Xl[3]);
+    du[3] = ( (geomr->g)*(qr.ucon[3])-(geomc->g)*(qc.ucon[3]) )/(Xr[3]-Xc[3]);
 
 
     // Sum and divide:
@@ -466,7 +476,11 @@ void heat_electrons_zone_nonthermal(int i, int j, int k, double Pi[NVAR], double
     ktotadv = Pf[KTOT];
 
     // Electron heating fraction
+    #ifdef FEL
+    fel = FEL;
+    #else
     fel = get_fel(i, j, k, Ps);
+    #endif
     felth = fel*(1-felnth);
 
     // Update thermal electron entropy according to Ressler+ 2015 Eqn. 27:

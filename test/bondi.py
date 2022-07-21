@@ -98,7 +98,7 @@ if not AUTO:
   ax.plot([RES[0]/2., RES[-1]*2.],
     10.*amp*np.asarray([RES[0]/2., RES[-1]*2.])**-2.,
     color='k', linestyle='--', label='N^-2')
-  plt.xscale('log', basex=2); plt.yscale('log')
+  plt.xscale('log', base=2); plt.yscale('log')
   plt.xlim([RES[0]/np.sqrt(2.), RES[-1]*np.sqrt(2.)])
   plt.xlabel('N'); plt.ylabel('L1')
   #plt.title(NAMES[MODES[n]])
