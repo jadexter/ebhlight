@@ -775,6 +775,8 @@ void dump()
       #if ELECTRONS
       WRITE_GRID(Qcool, "Qcool", TYPE_FLOAT);
       hdf5_add_units("Qcool", "code", file_id);
+      WRITE_GRID(Tcool, "Tcool", TYPE_FLOAT);
+      hdf5_add_units("Tcool", "code", file_id);
       #endif
     #endif
     #if RADIATION || COOLING

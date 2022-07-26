@@ -43,6 +43,7 @@ grid_double_type Qvisc_e, Qvisc_p, Qcoul;
 #endif // ELECTRONS
 #if COOLING
 grid_double_type Qcool;
+grid_double_type Tcool;
 #if (TCOOL == 1) && (METRIC == MKS || METRIC == MMKS)
 double Kmu[4];
 #endif
@@ -57,6 +58,7 @@ double dt_light[N1+2*NG][N2+2*NG], dt_light_min;
 /*******************************************************************************
     GLOBAL VARIABLES
 *******************************************************************************/
+int SHOWVISC;
 char outputdir[STRLEN], dumpdir[STRLEN], restartdir[STRLEN];
 char xmfdir[STRLEN];
 char init_from_grmhd[STRLEN];

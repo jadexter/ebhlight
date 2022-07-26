@@ -77,7 +77,6 @@ void step()
   bound_prim(P);
 
   #if RADIATION || COOLING
-
   // Apply radiation four-force to fluid
   apply_rad_force(P, dt);
   fixup(P);
@@ -90,7 +89,7 @@ void step()
 
   memset((void*)&radG[0][0][0][0], 0,
     (N1+2*NG)*(N2+2*NG)*(N3+2*NG)*NDIM*sizeof(double));
-  #endif // RADIATION
+  #endif // RADIATION || COOLING
 
   // Increment time
   t += dt;
@@ -166,10 +165,10 @@ double advance(grid_prim_type Pi, grid_prim_type Pb, double Dt,
   return (ndt);
 }
 
-#if RADIATION || COOLING // COOLING HERE I THINK?
+#if RADIATION || COOLING
 void apply_rad_force(grid_prim_type Pr, double Dt)
 {
-  double U[NVAR];
+  double U[NVAR]; // Holds fluxes
   struct of_state q;
 
   timer_start(TIMER_UPDATE);
@@ -182,6 +181,9 @@ void apply_rad_force(grid_prim_type Pr, double Dt)
     get_state(Pr[i][j][k], &(ggeom[i][j][CENT]), &q);
     primtoflux(Pr[i][j][k], &q, 0, &(ggeom[i][j][CENT]), U);
 
+    // AMH notes:
+    // increases fluxes by Dt*radG, so radG is definitely in coord frame
+    // Ryan+ 2015 Eq. 50
     for (int ip = 1; ip < 5; ip++) {
       U[ip] += Dt*radG[i][j][k][ip-1];
       radG_prev[i][j][k][ip-1] = radG[i][j][k][ip-1];
@@ -191,8 +193,8 @@ void apply_rad_force(grid_prim_type Pr, double Dt)
 
     if(pflag[i][j][k]) {
       fail_save[i][j][k] = 1;
-      fprintf(stderr,"[%i][istart=%i][%i %i %i] pflag = %i in apply rad force\n",
-              mpi_myrank(), global_start[1], i, j, k, pflag[i][j][k]);
+      // fprintf(stderr,"[%i][istart=%i][%i %i %i] pflag = %i in apply rad force\n",
+      // mpi_myrank(), global_start[1], i, j, k, pflag[i][j][k]);
     }
   } // ZLOOP
   timer_stop(TIMER_UPDATE);

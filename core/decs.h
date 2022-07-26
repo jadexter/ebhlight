@@ -185,6 +185,7 @@
 /*******************************************************************************
     GLOBAL ARRAYS
 *******************************************************************************/
+int SHOWVISC;
 typedef double grid_prim_type[N1 + 2*NG][N2 + 2*NG][N3 + 2*NG][NVAR];
 typedef double grid_double_type[N1 + 2*NG][N2 + 2*NG][N3 + 2*NG];
 typedef double grid_fourvector_type[N1 + 2*NG][N2 + 2*NG][N3 + 2*NG][NDIM];
@@ -200,7 +201,7 @@ extern grid_prim_type Psave;       // Half-step primitives
 extern grid_int_type pflag;     // Failure points
 extern grid_int_type fail_save;
 extern grid_fourvector_type jcon;
-#if RADIATION | COOLING
+#if RADIATION || COOLING
 extern grid_fourvector_type radG; // Radiation four-force
 extern grid_fourvector_type radG_prev; // Radiation four-force
 extern grid_fourvector_type radG_buf;
@@ -225,6 +226,7 @@ extern grid_double_type Qvisc_e, Qvisc_p, Qcoul;
 #endif // ELECTRONS
 #if COOLING
 extern grid_double_type Qcool;
+extern grid_double_type Tcool;
 #if (TCOOL == 1) && (METRIC == MKS || METRIC == MMKS)
 extern double Kmu[4];
 #endif

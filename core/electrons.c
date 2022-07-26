@@ -63,12 +63,40 @@ void heat_electrons_zone(int i, int j, int k, double Pi[NVAR], double Ps[NVAR],
   struct of_geom *geom = &ggeom[i][j][CENT];
   struct of_state q;
   get_state(Ps, geom, &q);
+  // AMH notes
+  // For diagnostic purposes, want to record the viscous heating as the
+  // change in internal energy in the rest frame of the fluid (per unit fluid proper time)
+  // to compare with Qcoul.
+  // First, calculate Qud, the energy rate in the coordinate frame.
   double uadv = ktotadv/(gam-1.)*pow(Pf[RHO],gam);
   double Qud = q.ucon[0]*q.ucov[0]*(Pf[UU] - uadv)*pow(Ps[RHO]/Pf[RHO],gam)/Dt;
+  // Convert to Qvisc (comoving frame): divide by u_t
+  // as in Kulkarni, Penna+ 2011 Appendix B.
+  // Note that Qvisc_e is set both in the predictor and the corrector step,
+  // i.e. the predictor values are overwritten.
+  double oldQvisc = Qvisc_e[i][j][k];
   // du_e / dtau
   Qvisc_e[i][j][k] = fel*Qud/q.ucov[0];
   // du_p / dtau
   Qvisc_p[i][j][k] = (1-fel)*Qud/q.ucov[0];
+
+  // AMH: temporary test
+  // Test if there are any places where Qvisc > Qcool.
+  // if ((Qcool[i][j][k] > 0.) && (Qvisc_e[i][j][k] > Qcool[i][j][k])){
+  // fprintf(stderr, "[%i %i] Qvisc step: %g, Qcool step %g\n", i, j, Qvisc_e[i][j][k], Qcool[i][j][k]);
+  // }
+  // Having obtained location for a cell where Qvisc>Qcool, see if that's
+  // only in corrector step.
+  // if ((mpi_myrank() == 0) && (i==15) && (j==15)) {
+  // fprintf(stderr, "Qvisc step: %g, Qcool step %g\n", Qvisc_e[i][j][k], Qcool[i][j][k]);
+  // }
+  // if ((mpi_myrank() == 0) && (i==10) && (j==32) && SHOWVISC) {
+  // SHOWVISC = 0;
+  // }
+  // Test if corrector step has higher Qvisc than the predictor
+  if ((Qvisc_e[i][j][k] > oldQvisc) && (i=15) && (j=15) && (Qcool[i][j][k] > 0.) && (Qvisc_e[i][j][k] - oldQvisc > Qcool[i][j][k])){
+    fprintf(stderr, "Qvisc predictor: %g, Qcool step %g, Qvisc corrector %g\n", oldQvisc, Qcool[i][j][k], Qvisc_e[i][j][k]);
+  }
 
   // Reset total entropy
   Pf[KTOT] = ktotharm;
@@ -272,6 +300,13 @@ void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
       get_state(Ps[i][j][k], geom, &q);
 
       double ue_f = Pf[i][j][k][KEL]*pow(Pf[i][j][k][RHO],game)/(game-1.);
+      // AMH notes:
+      // Qc is in the frame comoving with the fluid, ie per proper fluid time tau0.
+      // but ue is in the coordinate frame (t), so we need to transform Qc:
+      // Energy exchanged/unit coordinate time t
+      //         = energy exchanged/unit fluid proper time tau0 * dtau0/dt.
+      // dtau0/dt = 1/u^0 by definition of u^0.
+      // Note that tau0 is usually called tau (e.g. below).
       ue_f += Qc*Dt/q.ucon[0];
 
       // Record diagnostic (du_e / dtau)
@@ -312,6 +347,11 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   sigma = bsq/Ph[RHO];
 
   double tcool = get_tcool(i, r);
+  // AMH added output of tcool
+  // (will probably remove for production runs)
+  Tcool[i][j][k] = tcool;
+
+  // NOTE the below uel is in the coordinate frame! Maybe we need to convert
 
   uel = 1./(game-1.)*Ph[KEL]*pow(Ph[RHO],game);
   // Calculate current electron temperature...
@@ -319,7 +359,6 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   // mass density
   thetae = MP/ME*Ph[KEL]*pow(Ph[RHO],game-1.);
   Tel = thetae*ME*CL*CL/KBOL;
-  // Tel = (game-1.)*uel/Ph[RHO]; // JD way...missing MP/ME?
 
   // calculate cooling rate L following Noble+
   Tel_star = Tel_target*pow(r,-1.*Tel_rslope);
@@ -332,8 +371,8 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   L = 0.;
   //limit Y for now and don't cool sigma > 1
   Y = MY_MIN(Y, 1000.);
-  // if ((!isnan(Tel)) && (Y > 0.) && (uel > 0.) && (Tel > 0.) && (sigma < 1.)) {
-  if ((!isnan(Tel)) && (Y > 0.) && (uel > 0.) && (Tel > 0.)) {
+  if ((!isnan(Tel)) && (Y > 0.) && (uel > 0.) && (Tel > 0.) && (tcool > 0.0) && (sigma < 1.)) {
+  // if ((!isnan(Tel)) && (Y > 0.) && (uel > 0.) && (Tel > 0.)) {
     // this should cool the *electrons* e.g. cooling rate set by their uel not UU
     L = 2.*uel*pow(Y, q_constant)/tcool;
   }
@@ -347,11 +386,32 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
     fprintf(stderr, "coords: %g %g %g %g \n",X[0],X[1],r,th);
     L = 0.0;
   }
-  // AMH added output of L
+
+  if (L < 0.0){
+    L = 0.0;
+  }
+
+  // AMH added output of L.
+  // We definitely want to output L in the fluid frame to compare
+  // with Qc and Qvisc, which are also in the fluid frame.
   Qcool[i][j][k] = L;
 
+  // AMH: temporary test
+  // fprintf(stderr, "%i\n", mpi_myrank());
+  // if ((mpi_myrank() == 0) && (i==26) && (j==26)){
+  // if ((mpi_myrank() == 0) && (i==10) && (j==32) && (L>0.)){
+    // // fprintf(stderr, "%g %g", r, th);
+    // fprintf(stderr, "[%i %i] Qcool step: %g\n", i, j, Qcool[i][j][k]);
+    // SHOWVISC = 1;
+  // }
+  // AMH notes
   // Implement cooling as a passive sink in local energy conservation (Gcov)
   // update radG, the radiation four-force density (Ryan+ 2015 Eq. 4)
+  // According to Noble+ 2009, L is the energy radiated
+  // per proper time in the FLUID frame (eq. 13).
+  // Then multiplying L by -u_\nu gives the amount of radiated energy-mom
+  // per unit 4-volume in the COORDINATE frame (eq. 12),
+  // which is what ebhlight expects Gcov = G_\mu to be in (NOT the LNRF/ZAMO frame).
   for (int mu = 0; mu < NDIM; mu++) {
     Gcov[mu] = -L*q.ucov[mu]; // Noble+ 2009 Eqns. 12-13
     radG[i][j][k][mu] = Gcov[mu]*ggeom[i][j][CENT].g;
@@ -418,6 +478,7 @@ double get_tcool(int i, double r){
 }
 #endif // COOLING
 
+// AMH notes: compare to step.c's total fluid apply_rad_force
 void apply_rad_force_e(grid_prim_type Prh, grid_prim_type Pr,
   grid_fourvector_type radG, double Dt)
 {
@@ -433,6 +494,10 @@ void apply_rad_force_e(grid_prim_type Prh, grid_prim_type Pr,
     // Get fluid state at n + 1/2 where radiation four-force is centered
     get_state(Prh[i][j][k], geom, &q);
 
+    // AMH notes: C = -u^\mu G_\mu
+    // radG input is in the coordinate frame
+    // so summing over -u^\mu gives the total energy
+    // radiated in the fluid frame.
     for (int mu = 0; mu < NDIM; mu++) {
       C += -q.ucon[mu]*radG[i][j][k][mu];
     }
@@ -444,8 +509,13 @@ void apply_rad_force_e(grid_prim_type Prh, grid_prim_type Pr,
     C = C/geom->g;
 
     Urho = Pr[i][j][k][RHO]*q.ucon[0];
+    // AMH notes:
+    // Uel = U_{\kappa_e} defined in Ressler+ 2015 under eq. 22.
+    // Except where is the sqrt(-g)? Maybe not important for kerr
+    // which always has g=-1.
     Uel = Pr[i][j][k][KEL]*Urho;
 
+    // As in Ressler+ 2015 eq. 21, 22
     Uel += Dt*(C*(game-1.)*pow(Prh[i][j][k][RHO],1.-game));
 
     // Supercooling diagnostics
@@ -475,7 +545,7 @@ void apply_rad_force_e(grid_prim_type Prh, grid_prim_type Pr,
     Pr[i][j][k][KTOT] = (gam-1.)*Pr[i][j][k][UU]*pow(Pr[i][j][k][RHO],-gam);
   } // ZSLOOP
 }
-#endif // RADIATION
+#endif // RADIATION || COOLING
 
 void fixup_electrons(grid_prim_type P)
 {
