@@ -57,6 +57,7 @@ output_*
 prob/test_*
 prob/old_*
 prob/bak_*
+archive_*
 
 # Build system
 TMP
