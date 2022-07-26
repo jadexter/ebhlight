@@ -58,6 +58,7 @@ double dt_light[N1+2*NG][N2+2*NG], dt_light_min;
 /*******************************************************************************
     GLOBAL VARIABLES
 *******************************************************************************/
+int SHOWVISC;
 char outputdir[STRLEN], dumpdir[STRLEN], restartdir[STRLEN];
 char xmfdir[STRLEN];
 char init_from_grmhd[STRLEN];

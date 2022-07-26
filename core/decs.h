@@ -185,6 +185,7 @@
 /*******************************************************************************
     GLOBAL ARRAYS
 *******************************************************************************/
+int SHOWVISC;
 typedef double grid_prim_type[N1 + 2*NG][N2 + 2*NG][N3 + 2*NG][NVAR];
 typedef double grid_double_type[N1 + 2*NG][N2 + 2*NG][N3 + 2*NG];
 typedef double grid_fourvector_type[N1 + 2*NG][N2 + 2*NG][N3 + 2*NG][NDIM];

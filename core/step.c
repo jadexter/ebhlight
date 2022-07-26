@@ -157,7 +157,7 @@ double advance(grid_prim_type Pi, grid_prim_type Pb, double Dt,
     if(pflag[i][j][k]){
       fail_save[i][j][k] = 1;
       // fprintf(stderr,"[%i][istart=%i][%i %i %i] pflag = %i in advance\n",
-              // mpi_myrank(), global_start[1], i, j, k, pflag[i][j][k]);
+      // mpi_myrank(), global_start[1], i, j, k, pflag[i][j][k]);
     }
   } // ZLOOP
   timer_stop(TIMER_UPDATE);
@@ -165,7 +165,7 @@ double advance(grid_prim_type Pi, grid_prim_type Pb, double Dt,
   return (ndt);
 }
 
-#if RADIATION || COOLING // COOLING HERE I THINK?
+#if RADIATION || COOLING
 void apply_rad_force(grid_prim_type Pr, double Dt)
 {
   double U[NVAR]; // Holds fluxes
@@ -194,7 +194,7 @@ void apply_rad_force(grid_prim_type Pr, double Dt)
     if(pflag[i][j][k]) {
       fail_save[i][j][k] = 1;
       // fprintf(stderr,"[%i][istart=%i][%i %i %i] pflag = %i in apply rad force\n",
-              // mpi_myrank(), global_start[1], i, j, k, pflag[i][j][k]);
+      // mpi_myrank(), global_start[1], i, j, k, pflag[i][j][k]);
     }
   } // ZLOOP
   timer_stop(TIMER_UPDATE);

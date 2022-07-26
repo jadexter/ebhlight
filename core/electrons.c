@@ -63,12 +63,40 @@ void heat_electrons_zone(int i, int j, int k, double Pi[NVAR], double Ps[NVAR],
   struct of_geom *geom = &ggeom[i][j][CENT];
   struct of_state q;
   get_state(Ps, geom, &q);
+  // AMH notes
+  // For diagnostic purposes, want to record the viscous heating as the
+  // change in internal energy in the rest frame of the fluid (per unit fluid proper time)
+  // to compare with Qcoul.
+  // First, calculate Qud, the energy rate in the coordinate frame.
   double uadv = ktotadv/(gam-1.)*pow(Pf[RHO],gam);
   double Qud = q.ucon[0]*q.ucov[0]*(Pf[UU] - uadv)*pow(Ps[RHO]/Pf[RHO],gam)/Dt;
+  // Convert to Qvisc (comoving frame): divide by u_t
+  // as in Kulkarni, Penna+ 2011 Appendix B.
+  // Note that Qvisc_e is set both in the predictor and the corrector step,
+  // i.e. the predictor values are overwritten.
+  double oldQvisc = Qvisc_e[i][j][k];
   // du_e / dtau
   Qvisc_e[i][j][k] = fel*Qud/q.ucov[0];
   // du_p / dtau
   Qvisc_p[i][j][k] = (1-fel)*Qud/q.ucov[0];
+
+  // AMH: temporary test
+  // Test if there are any places where Qvisc > Qcool.
+  // if ((Qcool[i][j][k] > 0.) && (Qvisc_e[i][j][k] > Qcool[i][j][k])){
+  // fprintf(stderr, "[%i %i] Qvisc step: %g, Qcool step %g\n", i, j, Qvisc_e[i][j][k], Qcool[i][j][k]);
+  // }
+  // Having obtained location for a cell where Qvisc>Qcool, see if that's
+  // only in corrector step.
+  // if ((mpi_myrank() == 0) && (i==15) && (j==15)) {
+  // fprintf(stderr, "Qvisc step: %g, Qcool step %g\n", Qvisc_e[i][j][k], Qcool[i][j][k]);
+  // }
+  // if ((mpi_myrank() == 0) && (i==10) && (j==32) && SHOWVISC) {
+  // SHOWVISC = 0;
+  // }
+  // Test if corrector step has higher Qvisc than the predictor
+  if ((Qvisc_e[i][j][k] > oldQvisc) && (i=15) && (j=15) && (Qcool[i][j][k] > 0.) && (Qvisc_e[i][j][k] - oldQvisc > Qcool[i][j][k])){
+    fprintf(stderr, "Qvisc predictor: %g, Qcool step %g, Qvisc corrector %g\n", oldQvisc, Qcool[i][j][k], Qvisc_e[i][j][k]);
+  }
 
   // Reset total entropy
   Pf[KTOT] = ktotharm;
@@ -273,10 +301,12 @@ void coulomb(grid_prim_type Pi, grid_prim_type Ps, grid_prim_type Pf, double Dt)
 
       double ue_f = Pf[i][j][k][KEL]*pow(Pf[i][j][k][RHO],game)/(game-1.);
       // AMH notes:
-      // Qc is in the frame comoving with the fluid, ie per proper fluid time tau.
-      // but ue is in the coordinate frame, so we need to multiply Qc:
-      // Energy exchanged/unit coordinate time = energy exchanged/unit fluid proper time *
-      // dtau/dt. dtau/dt = 1/u^0 by definition of u^0 = dt/dtau.
+      // Qc is in the frame comoving with the fluid, ie per proper fluid time tau0.
+      // but ue is in the coordinate frame (t), so we need to transform Qc:
+      // Energy exchanged/unit coordinate time t
+      //         = energy exchanged/unit fluid proper time tau0 * dtau0/dt.
+      // dtau0/dt = 1/u^0 by definition of u^0.
+      // Note that tau0 is usually called tau (e.g. below).
       ue_f += Qc*Dt/q.ucon[0];
 
       // Record diagnostic (du_e / dtau)
@@ -321,6 +351,8 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   // (will probably remove for production runs)
   Tcool[i][j][k] = tcool;
 
+  // NOTE the below uel is in the coordinate frame! Maybe we need to convert
+
   uel = 1./(game-1.)*Ph[KEL]*pow(Ph[RHO],game);
   // Calculate current electron temperature...
   // Need MP/ME because Ph[KEL] includes *total* (not electron)
@@ -364,16 +396,22 @@ void electron_cooling_zone(int i, int j, int k, double Ph[NVAR], double dt){
   // with Qc and Qvisc, which are also in the fluid frame.
   Qcool[i][j][k] = L;
 
+  // AMH: temporary test
+  // fprintf(stderr, "%i\n", mpi_myrank());
+  // if ((mpi_myrank() == 0) && (i==26) && (j==26)){
+  // if ((mpi_myrank() == 0) && (i==10) && (j==32) && (L>0.)){
+    // // fprintf(stderr, "%g %g", r, th);
+    // fprintf(stderr, "[%i %i] Qcool step: %g\n", i, j, Qcool[i][j][k]);
+    // SHOWVISC = 1;
+  // }
   // AMH notes
   // Implement cooling as a passive sink in local energy conservation (Gcov)
   // update radG, the radiation four-force density (Ryan+ 2015 Eq. 4)
   // According to Noble+ 2009, L is the energy radiated
   // per proper time in the FLUID frame (eq. 13).
   // Then multiplying L by -u_\nu gives the amount of radiated energy-mom
-  // per unit 4-volume in the COORDINATE frame (eq. 12).
-  // Now the question is: does ebhlight expect radG to be in the coord frame
-  // or the fluid frame? Or the ZAMO frame?
-  // I'm pretty sure Gcov = G_\mu is in coord frame.
+  // per unit 4-volume in the COORDINATE frame (eq. 12),
+  // which is what ebhlight expects Gcov = G_\mu to be in (NOT the LNRF/ZAMO frame).
   for (int mu = 0; mu < NDIM; mu++) {
     Gcov[mu] = -L*q.ucov[mu]; // Noble+ 2009 Eqns. 12-13
     radG[i][j][k][mu] = Gcov[mu]*ggeom[i][j][CENT].g;
