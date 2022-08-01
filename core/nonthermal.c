@@ -275,8 +275,6 @@ double calc_expansion(int i, int j, int k, grid_prim_type Pi, grid_prim_type Pf,
     ucon_calc(Pi[i][j][k], geomc, pucon);
     du[0] = ( (geomc->g)*(qc.ucon[0])-(geomc->g)*(pucon[0]) )/Dt;
 
-    du[0]=0; // Test if time dimension matters
-
 
     // Dimension 1:
     geoml = &ggeom[i-1][j][CENT];
@@ -348,7 +346,7 @@ void set_nonthermal_gammas()
         nteGammas[ig] = pow(10,log10nteGammas[ig]);
 
         currgamma = nteGammas[ig];
-        if((currgamma>=gammainjmin)&&(currgamma<=gammainjmin)){
+        if((currgamma>=gammainjmin)&&(currgamma<=gammainjmax)){
             normterms[ig] = ME*(currgamma-1)*pow(currgamma,-PLAW);
         }
     }

@@ -10,13 +10,16 @@
 #include "io.h"
 
 static int shock;
+static double plaw;
 void set_problem_params()
 {
   set_param("shock", &shock);
+  set_param("plaw", &plaw);
 }
 void save_problem_params()
 { 
   WRITE_HDR(shock, TYPE_INT);
+  WRITE_HDR(plaw, TYPE_DBL);
 }
 
 void init_prob()

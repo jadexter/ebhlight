@@ -15,6 +15,32 @@ void heat_electrons_zone(int i, int j, int k, double Pi[NVAR], double Ps[NVAR],
   double Pf[NVAR], double Dt);
 void fixup_electrons_1zone(double P[NVAR]);
 
+#if NONTHERMAL
+void init_electrons()
+{
+  double uel;
+  #ifdef FELNTH
+  double felnth = FELNTH;
+  #else
+  double felnth = 0.015; // This was the default value from Chael
+  #endif
+
+
+  ZSLOOP(-NG, N1 + NG - 1, -NG, NG + N2 - 1, -NG, NG + N3 - 1) {
+    // Set electron internal energy to constant fraction of internal energy
+    uel = (1-felnth)*fel0*P[i][j][k][UU];
+
+    nonthermal_norm = felnth*fel0*P[i][j][k][UU]/normterm; // normterm is set in set_nonthermal_gammas and is = m_e*int(gam-1)*gam^-p
+    inject_nonthermal(P[i][j][k], nonthermal_norm, 1);
+
+    // Initialize entropies
+    P[i][j][k][KTOT] = (gam-1.)*P[i][j][k][UU]*pow(P[i][j][k][RHO],-gam);
+    P[i][j][k][KEL] = (game-1.)*uel*pow(P[i][j][k][RHO],-game);
+  }
+
+  bound_prim(P);
+}
+#else
 void init_electrons()
 {
   double uel;
@@ -30,6 +56,7 @@ void init_electrons()
 
   bound_prim(P);
 }
+#endif
 
 /**
  * @brief Loops through zones calculating the new entropies

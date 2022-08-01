@@ -186,13 +186,13 @@ void interact(grid_prim_type P, double t, double dt)
           }
 
           Xtoijk(X, &i, &j, &k);
-        if (i < 0 || i > N1+2*NG-1 ||
-            j < 0 || j > N2+2*NG-1 ||
-            k < 0 || k > N3+2*NG-1)
-        {
-          printf("BAD!\n");
-          printf("i = %i j = %i k = %i\n", i, j, k);
-          exit(-1);
+          if (i < 0 || i > N1+2*NG-1 ||
+          j < 0 || j > N2+2*NG-1 ||
+          k < 0 || k > N3+2*NG-1)
+          {
+            printf("BAD!\n");
+            printf("i = %i j = %i k = %i\n", i, j, k);
+            exit(-1);
           }
 
           if (!strcmp(PROBLEM_NAME, "bhtherm")) {
@@ -209,7 +209,7 @@ void interact(grid_prim_type P, double t, double dt)
 
           double Gcov[NDIM];
           for (int mu = 0; mu < NDIM; mu++) {
-            Gcov[mu] = 1./(ggeom[i][j][CENT].g*dt*d3x)*ph->w*kphys_to_num*Kcov[mu];
+            Gcov[mu] = ph->w*kphys_to_num*Kcov[mu]/(ggeom[i][j][CENT].g*dt*d3x);
             #pragma omp atomic
             radG[i][j][k][mu] += Gcov[mu]*ggeom[i][j][CENT].g;
           }
