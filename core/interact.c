@@ -158,9 +158,17 @@ void interact(grid_prim_type P, double t, double dt)
         #endif
 
         #if SCATTERING
-        dtau_scatt = (HPL*L_unit/(ME*CL*CL))*dlam*alpha_inv_scatt(nu, &m);
-        bias_scatt = get_scatt_bias(nu, &m, 
-          HPL*nu*ph->w/(ggeom[i][j][CENT].g*d3x*pow(L_unit,3)));
+          dtau_scatt = (HPL*L_unit/(ME*CL*CL))*dlam*alpha_inv_scatt(nu, &m);
+
+          #if NONTHERMAl
+            dtau_scatt += (HPL*L_unit/(ME*CL*CL))*dlam*nt_alpha_inv_scatt(nu, &m, P[i][j][k]);
+            bias_scatt = nt_get_scatt_bias(nu, &m, 
+              HPL*nu*ph->w/(ggeom[i][j][CENT].g*d3x*pow(L_unit,3)), P[i][j][k]);
+          
+          #else
+            bias_scatt = get_scatt_bias(nu, &m, 
+              HPL*nu*ph->w/(ggeom[i][j][CENT].g*d3x*pow(L_unit,3)));
+          #endif
         #endif
 
         xabs = -log(get_rand());

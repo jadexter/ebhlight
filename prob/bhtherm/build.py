@@ -24,6 +24,15 @@ bhl.config.set_cparm('SUPPRESS_HIGHB_HEAT', False)
 bhl.config.set_cparm('BETA_HEAT', True)
 bhl.config.set_cparm('COULOMB', True)
 
+# NONTHERMAL
+bhl.config.set_cparm('NONTHERMAL', False)
+bhl.config.set_cparm('SYNCHROTRON', True)
+bhl.config.set_cparm('BREMSSTRAHLUNG', True)
+bhl.config.set_cparm('ADIABTIC_SCALING', True)
+
+bhl.config.set_cparm('PLAW', 3.5)
+bhl.config.set_rparm('plaw', 'double', default = 3.5)
+
 # FLUID
 bhl.config.set_cparm('RECONSTRUCTION', 'WENO')
 bhl.config.set_cparm('X1L_GAS_BOUND', 'BC_PROB')

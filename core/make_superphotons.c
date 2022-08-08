@@ -44,7 +44,7 @@ void make_superphotons(grid_prim_type Prad, double t, double dt)
 
   int step_made_local = 0;
 
-  #pragma omp parallel reduction(+:step_made_local)
+  // #pragma omp parallel reduction(+:step_made_local)
   {
     struct of_photon *tmp, *head = photon_lists[omp_get_thread_num()];
     struct of_microphysics m;
@@ -58,7 +58,7 @@ void make_superphotons(grid_prim_type Prad, double t, double dt)
     {
       nz = (int)dnzs[i][j][k];
       if (dnzs[i][j][k] - nz > get_rand()) nz++;
-      //printf("dnzs[%i] = %e\n", i, dnzs[i][j][k]);
+      printf("dnzs[%i] = %e\n", i, dnzs[i][j][k]);
 
       if (nz > 0) {
         // Set up zone

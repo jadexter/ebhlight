@@ -56,14 +56,25 @@ void step()
   #endif
   bound_prim(Ph);
 
+  if (mpi_io_proc())
+    fprintf(stdout, "Right before radiation step\n");
   // Radiation step
   #if RADIATION
   make_superphotons(Ph, t, dt);
+  if (mpi_io_proc())
+    fprintf(stdout, "Made superphotons\n");
   push_superphotons(dt);
+  if (mpi_io_proc())
+    fprintf(stdout, "Pushed superphotons\n");
   interact(Ph, t, dt);
+  if (mpi_io_proc())
+    fprintf(stdout, "Interacted\n");
   bound_superphotons(t, dt);
+  if (mpi_io_proc())
+    fprintf(stdout, "Bound\n");
   #endif
-
+  if (mpi_io_proc())
+      fprintf(stdout, "Right after radiation step\n");
   // Corrector step
   ndt = advance(P, Ph, dt, P, 1);
   #if NONTHERMAL && !defined(SKIP_ADIAB)

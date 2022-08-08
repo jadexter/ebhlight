@@ -21,7 +21,7 @@ import os
 
 def matches_host():
   host = os.uname()[1]
-  return 'shas0430.rc.int.colorado.edu' in host
+  return 'shas0610.rc.int.colorado.edu' in host
 
 def get_options():
   host = {}

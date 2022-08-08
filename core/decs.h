@@ -731,6 +731,11 @@ int scatter_superphoton(grid_prim_type P, struct of_photon *ph, double X[NDIM],
   double Kcov[NDIM], double Kcon[NDIM]);
 void init_hotcross();
 double total_compton_cross_lkup(double w, double thetae);
+double sample_mu(double beta_e);
+void sample_beta(double Thetae, double *gamma_e, double *beta_e);
+#if NONTHERMAL
+void nt_sample_electron(double k[NDIM], double p[NDIM], double Thetae, double Ne, double *Prad);
+#endif
 #endif
 
 // step.c

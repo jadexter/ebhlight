@@ -7,17 +7,30 @@
  ******************************************************************************/
 
 #include "decs.h"
+#include "io.h"
 
 #define INIT_FILE ("init.txt")
 
 double *r_init, *P_cgs_init, *rho_cgs_init;
 
-void set_problem_params() 
-{ 
+#if NONTHERMAL
+static double plaw;
+void set_problem_params()
+{
+  set_param("plaw", &plaw);
 }
-void save_problem_params() 
-{ 
+void save_problem_params()
+{
+  WRITE_HDR(plaw, TYPE_DBL);
 }
+#else
+void set_problem_params()
+{
+}
+void save_problem_params()
+{
+}
+#endif
 
 void init_zone_thermal(int i, int j, int k, double dndlnu[NU_BINS_EMISS+1]);
 
@@ -70,6 +83,10 @@ void init_prob()
     P[i][j][k][B1] = 1.e-10;
     P[i][j][k][B2] = 0.;
     P[i][j][k][B3] = 0.;
+
+    #if NONTHERMAL
+    inject_nonthermal(P[i][j][k], -plaw, 1000);
+    #endif
    // printf("T: %e\n", 0.5*(gam-1)*P[i][j][k][UU]/P[i][j][k][RHO]*MP*CL*CL/KBOL);
   }
   //exit(-1);

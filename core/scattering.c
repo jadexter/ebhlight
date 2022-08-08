@@ -11,9 +11,7 @@
 #if RADIATION
 void sample_electron(double Ktetrad[NDIM], double Pelectron[NDIM],
   double Thetae);
-void sample_beta(double Thetae, double *gamma_e, double *beta_e);
 double sample_y(double Thetae);
-double sample_mu(double beta_e);
 void sample_scattered_photon(double k[NDIM], double p[NDIM], double kp[NDIM]);
 void boost(double v[NDIM], double u[NDIM], double vp[NDIM]);
 double sample_thomson();
@@ -69,7 +67,11 @@ int scatter_superphoton(grid_prim_type P, struct of_photon *ph, double X[NDIM],
     }
   }
 
+  #if NONTHERMAL
+  nt_sample_electron(Ktetrad, Pelectron, m.Thetae, m.Ne, P[i][j][k]);
+  #else
   sample_electron(Ktetrad, Pelectron, m.Thetae);
+  #endif
 
   for (int mu = 0; mu < NDIM; mu++) {
     if (isnan(Pelectron[mu]) || isinf(Pelectron[mu])) {
