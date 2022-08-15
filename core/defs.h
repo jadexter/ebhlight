@@ -21,6 +21,10 @@ grid_fourvector_type jcon;
 #if RADIATION
 grid_fourvector_type radG; // Radiation four-force
 grid_fourvector_type radG_prev; // Radiation four-force
+#if NONTHERMAL
+grid_fourvector_type radG_e; // Thermal portion of four-force
+grid_fourvector_type radG_e_buf;
+#endif
 grid_fourvector_type radG_buf;
 grid_tensor_type Rmunu;
 grid_int_type Nsph;

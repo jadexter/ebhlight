@@ -14,6 +14,9 @@ static int rank, numprocs, periodic[3], neighbors[3][3][3];
 #if RADIATION
 static MPI_Datatype mpi_photon_type, mpi_pointer_type;
 static MPI_Datatype radG_face_subtype[4];
+#if NONTHERMAL
+static MPI_Datatype radG_e_face_subtype[4];
+#endif
 static MPI_Datatype Jrad_face_subtype[4];
 void mpi_photon_sendrecv(int is, int js, int ks, int ir, int jr, int kr);
 #define NGR (1)
@@ -135,6 +138,28 @@ void init_mpi()
   MPI_Type_create_subarray(4, radG_sizes, radG_X3_subsizes, radG_starts,
     MPI_ORDER_C, radG_type, &radG_face_subtype[3]);
   MPI_Type_commit(&radG_face_subtype[3]);
+
+  #if NONTHERMAL
+  MPI_Datatype radG_e_type = MPI_DOUBLE;
+  int radG_e_sizes[4] = {N1+2*NG,N2+2*NG,N3+2*NG,NDIM};
+  int radG_e_starts[4] = {0,0,0,0};
+
+  int radG_e_X1_subsizes[4] = {NGR,N2+2*NGR,N3+2*NGR,NDIM};
+  MPI_Type_create_subarray(4, radG_e_sizes, radG_e_X1_subsizes, radG_e_starts,
+    MPI_ORDER_C, radG_e_type, &radG_e_face_subtype[1]);
+  MPI_Type_commit(&radG_e_face_subtype[1]);
+
+  int radG_e_X2_subsizes[4] = {N1+2*NGR,NGR,N3+2*NGR,NDIM};
+  MPI_Type_create_subarray(4, radG_e_sizes, radG_e_X2_subsizes, radG_e_starts,
+    MPI_ORDER_C, radG_e_type, &radG_e_face_subtype[2]);
+  MPI_Type_commit(&radG_e_face_subtype[2]);
+
+  int radG_e_X3_subsizes[4] = {N1+2*NGR,N2+2*NGR,NGR,NDIM};
+  MPI_Type_create_subarray(4, radG_e_sizes, radG_e_X3_subsizes, radG_e_starts,
+    MPI_ORDER_C, radG_e_type, &radG_e_face_subtype[3]);
+  MPI_Type_commit(&radG_e_face_subtype[3]);
+  #endif
+
   
   MPI_Datatype Jrad_type = MPI_DOUBLE;
   int Jrad_sizes[4] = {MAXNSCATT+2,N1+2*NG,N2+2*NG,N3+2*NG};
@@ -256,6 +281,10 @@ void reduce_radG_buf()
     for (int mu = 0; mu < NDIM; mu++) {
       radG[i][j][k][mu] += radG_buf[i][j][k][mu];
       radG_buf[i][j][k][mu] = 0.;
+      #if NONTHERMAL
+      radG_e[i][j][k][mu] += radG_e_buf[i][j][k][mu];
+      radG_e_buf[i][j][k][mu] = 0.;
+      #endif
     }
   }
 }
@@ -289,6 +318,37 @@ void sync_radG()
     neighbors[1][1][0], 5, &radG_buf[NG-NGR][NG-NGR][N3+NG-NGR][0], 1,
     radG_face_subtype[3], neighbors[1][1][2], 5, comm, &status);
   reduce_radG_buf();
+
+  #if NONTHERMAL
+  memset(&radG_e_buf[0][0][0][0], 0, 
+    (N1+2*NG)*(N2+2*NG)*(N3+2*NG)*NDIM*sizeof(double));
+
+  MPI_Status ntstatus;
+
+  MPI_Sendrecv(&radG_e[N1+NG][NG-NGR][NG-NGR][0], 1, radG_e_face_subtype[1],
+    neighbors[2][1][1], 0, &radG_e_buf[NG][NG-NGR][NG-NGR][0], 1, 
+    radG_e_face_subtype[1], neighbors[0][1][1], 0, comm, &ntstatus);
+  MPI_Sendrecv(&radG_e[NG-NGR][NG-NGR][NG-NGR][0], 1, radG_e_face_subtype[1],
+    neighbors[0][1][1], 1, &radG_e_buf[N1+NG-NGR][NG-NGR][NG-NGR][0], 1,
+    radG_e_face_subtype[1], neighbors[2][1][1], 1, comm, &ntstatus);
+  reduce_radG_buf();
+
+  MPI_Sendrecv(&radG_e[NG-NGR][N2+NG][NG-NGR][0], 1, radG_e_face_subtype[2],
+    neighbors[1][2][1], 2, &radG_e_buf[NG-NGR][NG][NG-NGR][0], 1,
+    radG_e_face_subtype[2], neighbors[1][0][1], 2, comm, &ntstatus);
+  MPI_Sendrecv(&radG_e[NG-NGR][NG-NGR][NG-NGR][0], 1, radG_e_face_subtype[2],
+    neighbors[1][0][1], 3, &radG_e_buf[NG-NGR][N2+NG-NGR][NG-NGR][0], 1,
+    radG_e_face_subtype[2], neighbors[1][2][1], 3, comm, &ntstatus);
+  reduce_radG_buf();
+
+  MPI_Sendrecv(&radG_e[NG-NGR][NG-NGR][N3+NG][0], 1, radG_e_face_subtype[3],
+    neighbors[1][1][2], 4, &radG_e_buf[NG-NGR][NG-NGR][NG][0], 1,
+    radG_e_face_subtype[3], neighbors[1][1][0], 4, comm, &ntstatus);
+  MPI_Sendrecv(&radG_e[NG-NGR][NG-NGR][NG-NGR][0], 1, radG_e_face_subtype[3],
+    neighbors[1][1][0], 5, &radG_e_buf[NG-NGR][NG-NGR][N3+NG-NGR][0], 1,
+    radG_e_face_subtype[3], neighbors[1][1][2], 5, comm, &ntstatus);
+  reduce_radG_buf();
+  #endif
 }
 
 void reduce_Jrad_buf()

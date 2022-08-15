@@ -355,11 +355,23 @@ void set_nonthermal_gammas()
 }
 
 /**
+ * @brief General injection function. Can be easily modified to use custom injection distributions or even an injection calculated seperately for each bin
+ * 
+ * @param Pr - Primitives
+ * @param Q - Heat to be injected (usually fel*felnth*Qtot)
+ * @param Dt - Time step
+ */
+void inject_nonthermal(double *Pr, double Q, double Dt){
+    double plaw_norm = Q/normterm; // normterm is set in set_nonthermal_gammas and is = m_e*int(gam-1)*gam^-p
+    inject_nonthermal_plaw(Pr, plaw_norm, Dt);
+}
+
+/**
  * @brief Injection of power law distributed nonthermal electrons (see Chael eq. 29)
  * 
  * @param Pr 
  */
-void inject_nonthermal(double *Pr, double normalization, double Dt){
+void inject_nonthermal_plaw(double *Pr, double normalization, double Dt){
     double gammatemp;
 
     NTEGAMMALOOP{
@@ -406,8 +418,9 @@ void calc_gdot_rad(double *Pr, struct of_geom *geom, double *gdot)
     NTEGAMMALOOP gdot[ig] += (-1.37e-16)*nion*nteGammas[ig]*(log(nteGammas[ig])+0.36); // Eq. 32 Chael + 17 
     #endif
 
-    #if INVERSE_COMPTON
+    #if COMPTON
     // This one is a bit trickier... Need some help here on how to calulcate Trad and Ehat. See notes for thoughts
+    // NTEGAMMALOOP gdot[ig] += (-3.25e-8)*(Ehat)*pow(nteGammas[ig],2)*FKN[ig];
     #endif
 }
 
@@ -459,11 +472,8 @@ double calc_bsq_cgs(double *Pr, struct of_geom *geom){
 
 void heat_electrons_zone_nonthermal(int i, int j, int k, double Pi[NVAR], double Ps[NVAR], double Pf[NVAR], double Dt){
     double ktotharm, ktotadv, fel, felth, felnth;
-    #ifdef FELNTH
-    felnth = FELNTH;
-    #else
-    felnth = 0.015; // This was the default value from Chael
-    #endif
+    
+    felnth = get_felnth(i,j,k,Ps);
 
     struct of_geom *geom = &ggeom[i][j][CENT];
     struct of_state qf;
@@ -485,8 +495,7 @@ void heat_electrons_zone_nonthermal(int i, int j, int k, double Pi[NVAR], double
     Pf[KEL] += (game-1.)/(gam-1.)*pow(Ps[RHO],gam-game)*felth*(ktotharm-ktotadv);
     // Update nonthermal electron entropy according to Chael 2017 Eqn. 30:
     double Qtot = (pow(Ps[RHO],gam-1)/(gam-1)) * (Pf[RHO]*(qf.ucon[0])*(ktotharm-ktotadv)/Dt);
-    nonthermal_norm = felnth*fel*Qtot/normterm; // normterm is set in set_nonthermal_gammas and is = m_e*int(gam-1)*gam^-p
-    inject_nonthermal(Pf, nonthermal_norm, Dt);
+    inject_nonthermal(Pf, felnth*fel*Qtot, Dt);
 
     // Diagnostics
     struct of_state q;
@@ -500,6 +509,31 @@ void heat_electrons_zone_nonthermal(int i, int j, int k, double Pi[NVAR], double
 
     // Reset total entropy
     Pf[KTOT] = ktotharm;
+}
+
+
+
+/**
+ * @brief Calculates the electron heating fraction (fel) from eqn 48 in the Ressler 15 paper
+ * 
+ * @param i First grid index
+ * @param j Second grid index
+ * @param k Third grid index
+ * @param P Primitive matrix at the specified gridpoint
+ * @return double felnth
+ */
+double get_felnth(int i, int j, int k, double P[NVAR])
+{
+    double felnth;
+    #ifdef FELNTH
+    felnth = FELNTH;
+    #endif
+
+    // This function has access to all the primitives, so any custom fel_nth could be constructed here!
+
+    felnth = 0.015; // This was the default constant value from Chael
+
+    return felnth; 
 }
 
 void apply_thermal_heating(double *Pr, struct of_state q, double heat, double Dt){

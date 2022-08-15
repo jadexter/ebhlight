@@ -68,7 +68,7 @@ int scatter_superphoton(grid_prim_type P, struct of_photon *ph, double X[NDIM],
   }
 
   #if NONTHERMAL
-  nt_sample_electron(Ktetrad, Pelectron, m.Thetae, m.Ne, P[i][j][k]);
+  int sampledNT = nt_sample_electron(Ktetrad, Pelectron, m.Thetae, m.Ne, P[i][j][k]);
   #else
   sample_electron(Ktetrad, Pelectron, m.Thetae);
   #endif
@@ -117,7 +117,11 @@ int scatter_superphoton(grid_prim_type P, struct of_photon *ph, double X[NDIM],
     }
   }
 
+  #if NONTHERMAL
+  return sampledNT ? 2 : 1;
+  #else
   return 1;
+  #endif
 }
 
 // Procedure from Canfield et al. 1987

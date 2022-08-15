@@ -228,6 +228,10 @@ extern grid_fourvector_type jcon;
 #if RADIATION
 extern grid_fourvector_type radG; // Radiation four-force
 extern grid_fourvector_type radG_prev; // Radiation four-force
+#if NONTHERMAL
+extern grid_fourvector_type radG_e; // Thermal portion of four-force
+extern grid_fourvector_type radG_e_buf;
+#endif
 extern grid_fourvector_type radG_buf;
 extern grid_tensor_type Rmunu;    // Radiation stress-energy tensor
 extern grid_int_type Nsph;
@@ -631,12 +635,14 @@ double gamma_integral(double *ureal);
 void nonthermal_adiab_upwind(double adiab, double *ngamma, double *nprime);
 double calc_expansion(int i, int j, int k, grid_prim_type Pi, grid_prim_type Pf, double Dt);
 void set_nonthermal_gammas();
-void inject_nonthermal(double *Pr, double normalization, double Dt);
+void inject_nonthermal(double *Pr, double Q, double Dt);
+void inject_nonthermal_plaw(double *Pr, double normalization, double Dt);
 void calc_gdot_rad(double *Pr, struct of_geom *geom, double *gdot);
 double calc_bsq_cgs(double *Pr, struct of_geom *geom);
 void heat_electrons_zone_nonthermal(int i, int j, int k, double Pi[NVAR], double Ps[NVAR], double Pf[NVAR], double Dt);
 double calc_potential(double *Pr);
 void apply_thermal_heating(double *Pr, struct of_state q, double heat, double Dt);
+double get_felnth(int i, int j, int k, double P[NVAR]);
 #endif
 
 // phys.c
@@ -734,7 +740,7 @@ double total_compton_cross_lkup(double w, double thetae);
 double sample_mu(double beta_e);
 void sample_beta(double Thetae, double *gamma_e, double *beta_e);
 #if NONTHERMAL
-void nt_sample_electron(double k[NDIM], double p[NDIM], double Thetae, double Ne, double *Prad);
+int nt_sample_electron(double k[NDIM], double p[NDIM], double Thetae, double Ne, double *Prad);
 #endif
 #endif
 

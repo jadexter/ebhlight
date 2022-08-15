@@ -283,9 +283,9 @@ void interact(grid_prim_type P, double t, double dt)
           phscatt->origin[3] = k;
           ph->w = (1. - 1./bias_scatt)*ph->w;
 
-          int success = scatter_superphoton(P, phscatt, X, Kcov, Kcon);
+          int scatter_type = scatter_superphoton(P, phscatt, X, Kcov, Kcon);
 
-          if (!success) {
+          if (!scatter_type) {
             step_fail_local++;
             free(phscatt);
             prev = ph;
@@ -304,13 +304,21 @@ void interact(grid_prim_type P, double t, double dt)
           if (N2 == 1) j = NG;
           if (N3 == 1) k = NG;
 
-          // Apply four-force at interaction site
+          // Apply four-force at interaction site if scatter event was off a thermal electron
           double Gcov[NDIM];
           for (int mu = 0; mu < NDIM; mu++) {
             Gcov[mu] = 1./(ggeom[i][j][CENT].g*dt*d3x)*phscatt->w*kphys_to_num*(Kcov[mu] - phscatt->Kcov[2][mu]);
             #pragma omp atomic
             radG[i][j][k][mu] += Gcov[mu]*ggeom[i][j][CENT].g;
+
+            #if NONTHERMAL
+            if (scatter_type == 1){
+              radG_e[i][j][k][mu] += Gcov[mu]*ggeom[i][j][CENT].g;
+            }
+            #endif
+
           }
+          
           
           // du_e / dtau
           int nscatt = MY_MIN(ph->nscatt, MAXNSCATT - 1);

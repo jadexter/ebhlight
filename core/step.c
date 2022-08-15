@@ -57,24 +57,21 @@ void step()
   bound_prim(Ph);
 
   if (mpi_io_proc())
-    fprintf(stdout, "Right before radiation step\n");
   // Radiation step
   #if RADIATION
   make_superphotons(Ph, t, dt);
   if (mpi_io_proc())
-    fprintf(stdout, "Made superphotons\n");
+    //fprintf(stdout, "Made superphotons\n");
   push_superphotons(dt);
   if (mpi_io_proc())
-    fprintf(stdout, "Pushed superphotons\n");
+    //fprintf(stdout, "Pushed superphotons\n");
   interact(Ph, t, dt);
   if (mpi_io_proc())
-    fprintf(stdout, "Interacted\n");
+    //fprintf(stdout, "Interacted\n");
   bound_superphotons(t, dt);
   if (mpi_io_proc())
-    fprintf(stdout, "Bound\n");
+    //fprintf(stdout, "Bound\n");
   #endif
-  if (mpi_io_proc())
-      fprintf(stdout, "Right after radiation step\n");
   // Corrector step
   ndt = advance(P, Ph, dt, P, 1);
   #if NONTHERMAL && !defined(SKIP_ADIAB)
@@ -104,13 +101,22 @@ void step()
   fixup(P);
   fixup_utoprim(P);
   #if ELECTRONS
+  #if NONTHERMAL
+  apply_rad_force_e(Ph, P, radG_e, dt);
+  #else
   apply_rad_force_e(Ph, P, radG, dt);
+  #endif
   fixup_electrons(P);
   #endif
   bound_prim(P);
 
   memset((void*)&radG[0][0][0][0], 0,
     (N1+2*NG)*(N2+2*NG)*(N3+2*NG)*NDIM*sizeof(double));
+
+  #if NONTHERMAL
+  memset((void*)&radG_e[0][0][0][0], 0,
+    (N1+2*NG)*(N2+2*NG)*(N3+2*NG)*NDIM*sizeof(double));
+  #endif
   #endif // RADIATION
 
   // Increment time

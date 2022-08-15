@@ -148,7 +148,7 @@ void sample_nonthermal(double *ngamma, double *gamma_e, double *beta_e)
     *beta_e = sqrt(1. - 1./((*gamma_e)*(*gamma_e)));
 }
 
-void nt_sample_electron(double k[NDIM], double p[NDIM], double Thetae, double Ne, double *Prad)
+int nt_sample_electron(double k[NDIM], double p[NDIM], double Thetae, double Ne, double *Prad)
 {
   double beta_e, mu, phi, cphi, sphi, gamma_e, sigma_KN;
   double K, sth, cth, x1, n0dotv0, v0, v1;
@@ -160,13 +160,16 @@ void nt_sample_electron(double k[NDIM], double p[NDIM], double Thetae, double Ne
   double ngamma[NTEBINS];
   NTEGAMMALOOP ngamma[ig] = Prad[ig+NTESTART];
   double n_enth = gamma_integral(ngamma);
+  int sampledNT = 0;
 
   do {
+    sampledNT = 0;
     if (get_rand() < (Ne-n_enth)/Ne){
         sample_beta(Thetae, &gamma_e, &beta_e);
     }
     else{
         sample_nonthermal(ngamma, &gamma_e, &beta_e);
+        sampledNT = 1;
     }
     
     mu = sample_mu(beta_e);
@@ -245,6 +248,8 @@ void nt_sample_electron(double k[NDIM], double p[NDIM], double Thetae, double Ne
   if (beta_e < 0) {
     fprintf(stderr, "betae error: %g %g %g %g\n", p[0], p[1], p[2], p[3]);
   }
+
+  return sampledNT;
 }
 
 
